@@ -1,7 +1,9 @@
 package com.dtt.service;
 
+import com.dtt.model.Applicant;
 import com.dtt.model.Education;
 import com.dtt.model.JobType;
+import com.dtt.model.User;
 import com.dtt.repository.EducationRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -26,6 +28,11 @@ public class EducationService {
         return education.orElse(null);
     }
 
+    public List<Education> getEducationByUser(User user) {
+        return educationRepository.findByUser(user);
+    }
+
+
     @Transactional
     public Education addEducation(Education education){
         if (education.getEducationId() != null){
@@ -33,6 +40,11 @@ public class EducationService {
         }
 
         return this.educationRepository.save(education);
+    }
+
+    @Transactional
+    public List<Education> addAllEducation(List<Education> listEducations){
+        return this.educationRepository.saveAll(listEducations);
     }
 
     @Transactional

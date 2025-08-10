@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="a05092b9-ee05-4986-9391-495a03a3d151" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/config/FirebaseConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/config/JacksonConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/controller/ApiApplicationController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/controller/ApiEmailController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/controller/ApiFavoriteJobController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/controller/ApiInstitutionController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/controller/ApiInterviewController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/controller/ApiJobController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/controller/ApiLevelController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/controller/ApiLocationController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/controller/ApiModeratorController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/controller/ApiRecruiterController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/controller/NotificationController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/dto/ActivationDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/dto/ApplicantDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/dto/ApplicationAcceptedEmailDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/dto/ApplicationDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/dto/EducationDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/dto/FavoriteJobDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/dto/InstitutionDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/dto/InterviewDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/dto/InterviewLocationDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/dto/JobDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/dto/LevelDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/dto/LocationDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/dto/ModeratorDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/dto/ModeratorJobDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/dto/NotificationRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/dto/PublicUserDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/dto/RecruiterDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/Application.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/FavoriteJob.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/Institution.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/Interview.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/InterviewLocation.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/Job.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/Level.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/Location.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/Moderator.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/repository/ApplicationRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/repository/FavoriteJobRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/repository/InstitutionRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/repository/InterviewLocationRepositroy.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/repository/InterviewRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/repository/JobRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/repository/LevelRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/repository/LocationRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/repository/ModeratorRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/ApplicationService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/CustomOAuth2UserService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/EmailService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/FavoriteJobService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/FirebaseMessagingService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/InstitutionService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/InterviewLocationService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/InterviewService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/JobService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/LevelService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/LocationService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/ModeratorService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/resources/application.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spring boot/src/main/resources/firebase/firebase-service-account.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactjs/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/reactjs/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactjs/src/App.css" beforeDir="false" afterPath="$PROJECT_DIR$/reactjs/src/App.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactjs/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/reactjs/src/App.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactjs/src/components/reducers/MyUserReducer.js" beforeDir="false" afterPath="$PROJECT_DIR$/reactjs/src/components/reducers/MyUserReducer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactjs/src/configs/Apis.js" beforeDir="false" afterPath="$PROJECT_DIR$/reactjs/src/configs/Apis.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactjs/src/configs/MyContexts.js" beforeDir="false" afterPath="$PROJECT_DIR$/reactjs/src/configs/MyContexts.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactjs/src/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/reactjs/src/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactjs/src/pages/LoginPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/reactjs/src/pages/LoginPage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactjs/yarn.lock" beforeDir="false" afterPath="$PROJECT_DIR$/reactjs/yarn.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/recruitmentdb.sql" beforeDir="false" afterPath="$PROJECT_DIR$/recruitmentdb.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/config/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/controller/ApiAdminController.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/controller/ApiAdminController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/controller/ApiApplicantController.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/controller/ApiApplicantController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/controller/ApiEducationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/controller/ApiEducationController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/controller/ApiUserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/controller/ApiUserController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/dto/UserDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/dto/UserDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/Admin.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/Admin.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/Applicant.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/Applicant.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/Education.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/Education.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/JobIndustry.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/JobIndustry.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/JobType.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/JobType.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/Recruiter.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/Recruiter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/model/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/repository/ApplicantRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/repository/ApplicantRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/repository/EducationRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/repository/EducationRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/repository/UserRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/AdminService.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/AdminService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/ApplicantService.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/ApplicantService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/EducationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/EducationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/RecruiterService.java" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/java/com/dtt/service/RecruiterService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spring boot/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/spring boot/src/main/resources/application.properties" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 6
+}]]></component>
+  <component name="ProjectId" id="310HgxeEmBf3ZgSwLPi9pWHQZYW" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "D:/Documents/Spring Boot Project/recruitment"
+  }
+}]]></component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="a05092b9-ee05-4986-9391-495a03a3d151" name="Changes" comment="" />
+      <created>1754654184836</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1754654184836</updated>
+    </task>
+    <servers />
+  </component>
+</project>

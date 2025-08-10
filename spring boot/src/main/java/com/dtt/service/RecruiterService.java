@@ -28,16 +28,25 @@ public class RecruiterService {
         return recruiter.orElse(null);
     }
 
+    public Recruiter getRecruiterByUser(User user){
+        Recruiter recruiter = this.recruiterRepository.findByUser(user);
+        return recruiter;
+    }
+
     @Transactional
     public Recruiter addRecruiter(Recruiter recruiter){
         if (recruiter.getRecruiterId() != null){
             throw new IllegalArgumentException("New Recruiter must not have an ID");
         }
 
-        int userId = recruiter.getUser().getUserId();
+        return this.recruiterRepository.save(recruiter);
+    }
 
-        User user = this.userService.getUserById(userId);
-        recruiter.setUser(user);
+    @Transactional
+    public Recruiter updateRecruiter(Recruiter recruiter){
+        if (recruiter.getRecruiterId() == null){
+            throw new IllegalArgumentException("Recruiter must  have an ID");
+        }
 
         return this.recruiterRepository.save(recruiter);
     }

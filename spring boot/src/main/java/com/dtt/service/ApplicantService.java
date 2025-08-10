@@ -5,6 +5,7 @@ import com.dtt.model.Recruiter;
 import com.dtt.model.User;
 import com.dtt.repository.ApplicantRepository;
 import jakarta.transaction.Transactional;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,17 +29,24 @@ public class ApplicantService {
         return applicant.orElse(null);
     }
 
+    public Applicant getApplicantByUser(User user){
+        return this.applicantRepository.findByUser(user);
+    }
+
     @Transactional
     public Applicant addApplicant(Applicant applicant){
         if (applicant.getApplicantId() != null){
             throw new IllegalArgumentException("New Applicant must not have an ID");
         }
 
-        int userId = applicant.getUser().getUserId();
+        return this.applicantRepository.save(applicant);
+    }
 
-        User user = this.userService.getUserById(userId);
-        applicant.setUser(user);
-
+    @Transactional
+    public Applicant updateApplicant(Applicant applicant){
+        if (applicant.getApplicantId() == null){
+            throw new IllegalArgumentException("Applicant must have an ID");
+        }
         return this.applicantRepository.save(applicant);
     }
 

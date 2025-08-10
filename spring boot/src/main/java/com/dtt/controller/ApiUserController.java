@@ -1,14 +1,18 @@
 package com.dtt.controller;
 
 import com.dtt.dto.LoginDTO;
+import com.dtt.dto.PublicUserDTO;
 import com.dtt.dto.UserDTO;
+import com.dtt.model.Applicant;
 import com.dtt.model.User;
+import com.dtt.service.ApplicantService;
 import com.dtt.service.UserService;
 import com.dtt.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
@@ -21,6 +25,9 @@ public class ApiUserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private ApplicantService applicantService;
+
     @GetMapping("/users")
     public ResponseEntity<List<User>> getAllUser(){
         return ResponseEntity.ok(this.userService.getAllUser());
@@ -31,8 +38,21 @@ public class ApiUserController {
         return ResponseEntity.ok(this.userService.getUserById(id));
     }
 
+    @GetMapping("/public/users/{id}")
+    public ResponseEntity<PublicUserDTO> getPublicUserById(@PathVariable int id){
+        PublicUserDTO publicUserDTO = new PublicUserDTO();
+        User user = this.userService.getUserById(id);
+        publicUserDTO.setUserId(id);
+        publicUserDTO.setEmail(user.getEmail());
+        publicUserDTO.setFirstName(user.getFirstName());
+        publicUserDTO.setLastName(user.getLastName());
+        publicUserDTO.setEmail(user.getEmail());
+
+        return ResponseEntity.ok(publicUserDTO);
+    }
+
     @PostMapping("/users/add")
-    public ResponseEntity<User> addUser(@ModelAttribute UserDTO userDTO){
+    public ResponseEntity<?> addUser(@ModelAttribute UserDTO userDTO){
         User user = new User();
         user.setUsername(userDTO.getUsername());
         user.setPassword(userDTO.getPassword());
@@ -40,23 +60,24 @@ public class ApiUserController {
         user.setFirstName(userDTO.getFirstName());
         user.setLastName(userDTO.getLastName());
         user.setPhone(userDTO.getPhone());
-        user.setRole(userDTO.getRole());
-        user.setFile(userDTO.getFile());
+        user.setRole(User.Role.valueOf(userDTO.getRole()));
+        user.setProvider(User.Provider.valueOf(userDTO.getProvider()));
+        user.setProviderId(userDTO.getProviderId());
         user.setCreatedAt(LocalDateTime.now());
-
+        user.setFile(userDTO.getFile());
 
         return ResponseEntity.ok(this.userService.addOrUpdateUser(user));
     }
 
+
     @PatchMapping("/users/{id}/update")
     public ResponseEntity<User> updateUser(@ModelAttribute UserDTO userDTO, @PathVariable int id){
         User user = this.userService.getUserById(id);
-        user.setPassword(userDTO.getPassword());
         user.setEmail(userDTO.getEmail());
         user.setFirstName(userDTO.getFirstName());
         user.setLastName(userDTO.getLastName());
         user.setPhone(userDTO.getPhone());
-        user.setRole(userDTO.getRole());
+        user.setRole(User.Role.valueOf(userDTO.getRole()));
         user.setFile(userDTO.getFile());
 
         return ResponseEntity.ok(this.userService.addOrUpdateUser(user));
@@ -87,11 +108,48 @@ public class ApiUserController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Sai thông tin đăng nhập");
     }
 
+    @PostMapping("/register/applicant")
+    public ResponseEntity<Applicant> register(@ModelAttribute UserDTO userDTO){
+        User user = new User();
+        user.setUsername(userDTO.getUsername());
+        user.setPassword(userDTO.getPassword());
+        user.setEmail(userDTO.getEmail());
+        user.setFirstName(userDTO.getFirstName());
+        user.setLastName(userDTO.getLastName());
+        user.setPhone(userDTO.getPhone());
+        user.setRole(User.Role.APPLICANT);
+        user.setProvider(User.Provider.LOCAL);
+        user.setProviderId(null);
+        user.setFile(userDTO.getFile());
+        user.setCreatedAt(LocalDateTime.now());
+
+        this.userService.addOrUpdateUser(user);
+        Applicant applicant = new Applicant();
+        applicant.setUser(user);
+
+        return ResponseEntity.ok(this.applicantService.addApplicant(applicant));
+    }
+
 
     @RequestMapping("/secure/profile")
     @ResponseBody
     @CrossOrigin
     public ResponseEntity<User> getProfile(Principal principal) {
         return new ResponseEntity<>(this.userService.getUserByUsername(principal.getName()), HttpStatus.OK);
+    }
+
+    @PatchMapping("/secure/profile/update")
+    @ResponseBody
+    @CrossOrigin
+    public ResponseEntity<User> updateProfile(Principal principal, @ModelAttribute UserDTO userDTO) {
+        User user = this.userService.getUserByUsername(principal.getName());
+        user.setEmail(userDTO.getEmail());
+        user.setFirstName(userDTO.getFirstName());
+        user.setLastName(userDTO.getLastName());
+        user.setPhone(userDTO.getPhone());
+        user.setFile(userDTO.getFile());
+
+
+        return ResponseEntity.ok(this.userService.addOrUpdateUser(user));
     }
 }

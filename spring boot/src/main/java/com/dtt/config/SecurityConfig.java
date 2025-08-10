@@ -1,6 +1,9 @@
 package com.dtt.config;
 
 import com.dtt.filters.JwtFilter;
+import com.dtt.service.CustomOAuth2UserService;
+import com.dtt.utils.JwtUtils;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +21,9 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
+    @Autowired
+    private CustomOAuth2UserService customOAuth2UserService;
+
     @Bean
     public JwtFilter jwtFilter() {
         return new JwtFilter();
@@ -29,23 +35,51 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/login", "/api/register"
-                        ).permitAll()
-                        .requestMatchers(
-                                "/api/secure/profile"
-                        ).hasAnyRole("ADMIN", "RECRUITER", "APPLICANT")
-                        .requestMatchers(
-                                "/"
-                        ).hasAnyRole("ADMIN", "RECRUITER")
-                        .requestMatchers(
-                                "/api/admins", "/api/admins/**",
-                                "/api/applicants", "/api/applicant/**",
+                                "/api/login", "/api/register", "/api/register/**",
                                 "/api/educations", "/api/educations/**",
                                 "/api/job-industries", "/api/job-industries/**",
                                 "/api/job-types", "/api/job-types/**",
-                                "/api/users", "/api/users/**"
-                        ).hasRole("ADMIN")
+                                "/api/levels", "/api/levels/**",
+                                "/api/institutions", "/api/institutions/**",
+                                "/api/notifications/**",
+                                "/api/jobs", "/api/jobs/*",
+                                "/api/public/users/**"
+                        ).permitAll()
+                        .requestMatchers(
+                                "/api/secure/profile", "/api/secure/profile/**",
+                                "/api/applications", "/api/applications/**",
+                                "/api/favorites",  "/api/favorites/**",
+                                "/api/interviews/my",
+                                "/api/send/mail/**",
+                                "/api/locations", "/api/locations/**",
+                                "/api/users/applicants/*", "/api/users/recruiters/*",
+                                "/api/export/**"
+                        ).hasAnyRole("ADMIN", "RECRUITER", "APPLICANT", "MODERATOR")
+                        .requestMatchers(
+                                "/api/jobs/*/**",
+                                "/api/users/recruiters/**",
+                                "/api/interviews", "/api/interviews/**"
+                        ).hasAnyRole("ADMIN", "RECRUITER", "MODERATOR")
+                        .requestMatchers(
+                                "/api/users", "/api/users/**",
+                                "/api/users/moderators/**"
+                        ).hasAnyRole("ADMIN", "MODERATOR")
                         .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService)
+                        )
+                        .successHandler((request, response, authentication) -> {
+                            try {
+                                String username = authentication.getName();
+                                String token = JwtUtils.generateToken(username); // Dùng JwtUtils có sẵn
+                                response.sendRedirect("http://localhost:3000/oauth2/redirect?token=" + token);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Token generation failed");
+                            }
+                        })
                 )
                 .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class)
                 .logout(logout -> logout

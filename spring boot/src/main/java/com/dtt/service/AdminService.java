@@ -35,11 +35,6 @@ public class AdminService {
             throw new IllegalArgumentException("New Admin must not have an ID");
         }
 
-        int userId = admin.getUser().getUserId();
-
-        User user = this.userService.getUserById(userId);
-        admin.setUser(user);
-
         return this.adminRepository.save(admin);
     }
 

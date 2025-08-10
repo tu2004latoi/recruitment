@@ -12,6 +12,9 @@ public class UserDTO {
     private String firstName;
     private String lastName;
     private String phone;
-    private User.Role role;
+    private String role;
+    private String provider;
+    private String providerId;
+    private String avatar;
     private MultipartFile file;
 }

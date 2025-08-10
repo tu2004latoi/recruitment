@@ -3,13 +3,15 @@ package com.dtt.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
+
 @Entity
 @Table(name = "job_industries")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class JobIndustry {
+public class JobIndustry implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

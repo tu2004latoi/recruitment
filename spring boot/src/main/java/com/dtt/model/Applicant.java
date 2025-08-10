@@ -6,7 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "applicants")
@@ -14,13 +16,13 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Applicant {
+public class Applicant implements Serializable {
 
     @Id
     @Column(name = "applicant_id")
     private Integer applicantId;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @MapsId
     @JoinColumn(name = "applicant_id", referencedColumnName = "user_id")
     private User user;
@@ -32,7 +34,9 @@ public class Applicant {
     @Column(columnDefinition = "enum('MALE','FEMALE')")
     private Gender gender;
 
-    private String address;
+    @OneToOne
+    @JoinColumn(name = "location_id", referencedColumnName = "location_id")
+    private Location location;
 
     @Column(name = "experience_years")
     private Integer experienceYears;
@@ -40,14 +44,17 @@ public class Applicant {
     @Column(columnDefinition = "text")
     private String skills;
 
+    @Column(name = "job_title")
+    private String jobTitle;
+
     @Column(columnDefinition = "text")
     private String bio;
 
-    @ManyToOne
-    @JoinColumn(name = "education_id", foreignKey = @ForeignKey(name = "FK_education"), nullable = true)
-    private Education education;
-
     public enum Gender {
         MALE, FEMALE
+    }
+
+    public String fullName(){
+        return user.getLastName() + user.getFirstName();
     }
 }

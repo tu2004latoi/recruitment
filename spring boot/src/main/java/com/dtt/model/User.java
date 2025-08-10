@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class User implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,6 +45,14 @@ public class User {
     private String avatar;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "provider", length = 20)
+    private Provider provider;
+
+    @Column(name = "provider_id", length = 255)
+    private String providerId;
+
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "role", length = 20)
     private Role role;
 
@@ -61,6 +70,12 @@ public class User {
     public enum Role {
         ADMIN,
         RECRUITER,
-        APPLICANT
+        APPLICANT,
+        MODERATOR
+    }
+
+    public enum Provider {
+        LOCAL,
+        GOOGLE
     }
 }

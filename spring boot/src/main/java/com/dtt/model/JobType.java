@@ -3,12 +3,14 @@ package com.dtt.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
+
 @Entity
 @Table(name = "job_types")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class JobType {
+public class JobType implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
