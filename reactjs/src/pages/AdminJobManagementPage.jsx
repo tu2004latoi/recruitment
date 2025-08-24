@@ -22,8 +22,10 @@ import {
     FaToggleOff,
     FaUserShield
 } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 const AdminJobManagementPage = () => {
+    const { t } = useTranslation();
     const [jobs, setJobs] = useState([]);
     const [filteredJobs, setFilteredJobs] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -54,7 +56,7 @@ const AdminJobManagementPage = () => {
         if (user) {
             // Kiểm tra quyền admin hoặc moderator
             if (user.role !== "ADMIN" && user.role !== "MODERATOR") {
-                alert("Bạn không có quyền truy cập trang này!");
+                alert(t('adminJobs.alerts.accessDenied'));
                 navigate("/");
                 return;
             }
@@ -66,18 +68,25 @@ const AdminJobManagementPage = () => {
         filterJobs();
     }, [jobs, searchTerm, selectedLevel, selectedJobType, selectedIndustry, selectedStatus, selectedRecruiter]);
 
+    // Refetch from server when server-supported filters change
+    useEffect(() => {
+        if (!user) return;
+        // Reset to first page when filters/search change
+        fetchData(0);
+    }, [searchTerm, selectedLevel, selectedJobType, selectedIndustry, selectedSalary, selectedStatus]);
+
     const fetchCurrentUser = async () => {
         try {
             const response = await authApis().get(endpoints["currentUser"]);
             setUser(response.data);
         } catch (err) {
             console.error("Failed to fetch current user:", err);
-            alert("Không thể tải thông tin người dùng!");
+            alert(t('adminJobs.alerts.loadUserFailed'));
             navigate("/login");
         }
     };
 
-    const fetchData = async () => {
+    const fetchData = async (targetPage = 0) => {
         setIsLoading(true);
         try {
             // Build query params for search API
@@ -87,14 +96,18 @@ const AdminJobManagementPage = () => {
             if (selectedJobType) params.jobTypeId = selectedJobType;
             if (selectedIndustry) params.industryId = selectedIndustry;
             if (selectedSalary) params.salary = selectedSalary;
+            // Moderator can filter by approval status via backend
+            if (user?.role === "MODERATOR" && selectedStatus) params.status = selectedStatus;
+            // Pagination
+            params.page = targetPage;
+            params.size = 6;
 
             // Nếu backend có endpoint search cho admin, dùng endpoints["jobSearch"], nếu không thì endpoints["jobs"]
             const jobsRes = await authApis().get(endpoints["jobSearch"] || endpoints["jobs"], { params });
             const jobsArray = Array.isArray(jobsRes.data) ? jobsRes.data : (jobsRes.data?.content || []);
             setJobs(jobsArray);
-            setFilteredJobs(jobsArray);
             setTotalPages(jobsRes.data?.totalPages || 1);
-            setPage(0);
+            setPage(targetPage);
 
             // Fetch các tùy chọn filter
             const [levelsRes, jobTypesRes, industriesRes, recruitersRes] = await Promise.all([
@@ -108,9 +121,10 @@ const AdminJobManagementPage = () => {
             setIndustries(industriesRes.data);
             const recruiterUsers = recruitersRes.data.filter(u => u.role === "RECRUITER");
             setRecruiters(recruiterUsers);
+            console.log(recruiterUsers);
         } catch (err) {
             console.error("Failed to fetch data:", err);
-            alert("Không thể tải dữ liệu!");
+            alert(t('adminJobs.alerts.loadFailed'));
         } finally {
             setIsLoading(false);
         }
@@ -204,13 +218,13 @@ const AdminJobManagementPage = () => {
     };
 
     const formatDate = (dateString) => {
-        if (!dateString) return "N/A";
+        if (!dateString) return t('jobListing.labels.unknown');
         return new Date(dateString).toLocaleDateString('vi-VN');
     };
 
     const formatSalary = (salary) => {
-        if (!salary) return "Thỏa thuận";
-        return new Intl.NumberFormat('vi-VN').format(salary) + " VNĐ";
+        if (!salary) return t('jobDetail.salary.negotiable');
+        return new Intl.NumberFormat('vi-VN').format(salary) + " " + t('jobDetail.currency.vnd');
     };
 
     const getTimeAgo = (dateString) => {
@@ -220,10 +234,10 @@ const AdminJobManagementPage = () => {
         const diffTime = Math.abs(now - jobDate);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         
-        if (diffDays === 1) return "Hôm nay";
-        if (diffDays <= 7) return `${diffDays} ngày trước`;
-        if (diffDays <= 30) return `${Math.floor(diffDays / 7)} tuần trước`;
-        return `${Math.floor(diffDays / 30)} tháng trước`;
+        if (diffDays === 1) return t('jobDetail.time.today');
+        if (diffDays <= 7) return t('jobDetail.time.daysAgo', { count: diffDays });
+        if (diffDays <= 30) return t('jobDetail.time.weeksAgo', { count: Math.floor(diffDays / 7) });
+        return t('jobDetail.time.monthsAgo', { count: Math.floor(diffDays / 30) });
     };
 
     const handleViewJob = (jobId) => {
@@ -238,12 +252,12 @@ const AdminJobManagementPage = () => {
 
     const handleDeleteJob = async (e, jobId) => {
         e.stopPropagation();
-        if (!window.confirm("Bạn có chắc chắn muốn xóa công việc này?")) return;
+        if (!window.confirm(t('adminJobs.alerts.deleteConfirm'))) return;
         
         setIsDeleting(true);
         try {
             await authApis().delete(endpoints.deleteJob(jobId));
-            alert("Xóa công việc thành công!");
+            alert(t('adminJobs.alerts.deleteSuccess'));
             setJobs(jobs.filter(j => j.jobId !== jobId));
             setFilteredJobs(filteredJobs.filter(j => j.jobId !== jobId));
         } catch (err) {
@@ -283,8 +297,8 @@ const AdminJobManagementPage = () => {
             };
             await authApis().patch(endpoints.approveJob(jobId), moderatorJobDTO);
             alert("Đã duyệt công việc thành công!");
-            // Refresh danh sách
             fetchData(page);
+            
         } catch (err) {
             alert("Không thể duyệt công việc!");
             console.error(err);
@@ -706,7 +720,7 @@ const AdminJobManagementPage = () => {
                                                         <button
                                                             onClick={() => handleViewJob(job.jobId)}
                                                             className="p-2 border border-blue-200 rounded hover:bg-blue-100 text-blue-600 transition"
-                                                            title="Xem chi tiết"
+                                                            title={t('adminJobs.actions.view')}
                                                         >
                                                             <FaEye />
                                                         </button>
@@ -714,7 +728,7 @@ const AdminJobManagementPage = () => {
                                                             <button
                                                                 onClick={(e) => handleEditJob(e, job.jobId)}
                                                                 className="p-2 border border-yellow-200 rounded hover:bg-yellow-100 text-yellow-600 transition"
-                                                                title="Chỉnh sửa"
+                                                                title={t('adminJobs.actions.edit')}
                                                             >
                                                                 <FaEdit />
                                                             </button>
@@ -724,7 +738,7 @@ const AdminJobManagementPage = () => {
                                                                 onClick={(e) => handleToggleJobStatus(e, job.jobId, job.isActive)}
                                                                 disabled={isUpdating}
                                                                 className={`p-2 border rounded transition ${job.isActive ? "border-red-200 hover:bg-red-100 text-red-600" : "border-green-200 hover:bg-green-100 text-green-600"}`}
-                                                                title={job.isActive ? "Tắt hoạt động" : "Bật hoạt động"}
+                                                                title={job.isActive ? t('adminJobs.actions.deactivate') : t('adminJobs.actions.activate')}
                                                             >
                                                                 {job.isActive ? <FaToggleOff /> : <FaToggleOn />}
                                                             </button>
@@ -735,7 +749,7 @@ const AdminJobManagementPage = () => {
                                                                     onClick={(e) => handleApproveJob(e, job.jobId)}
                                                                     disabled={isUpdating}
                                                                     className="p-2 border border-green-200 rounded hover:bg-green-100 text-green-600 transition"
-                                                                    title="Duyệt công việc"
+                                                                    title={t('adminJobs.actions.approve')}
                                                                 >
                                                                     <FaCheck />
                                                                 </button>
@@ -743,7 +757,7 @@ const AdminJobManagementPage = () => {
                                                                     onClick={(e) => handleRejectJob(e, job.jobId)}
                                                                     disabled={isUpdating}
                                                                     className="p-2 border border-red-200 rounded hover:bg-red-100 text-red-600 transition"
-                                                                    title="Từ chối công việc"
+                                                                    title={t('adminJobs.actions.reject')}
                                                                 >
                                                                     <FaTimes />
                                                                 </button>
@@ -754,7 +768,7 @@ const AdminJobManagementPage = () => {
                                                                 onClick={(e) => handleDeleteJob(e, job.jobId)}
                                                                 disabled={isDeleting}
                                                                 className="p-2 border border-red-300 rounded hover:bg-red-200 text-red-700 transition"
-                                                                title="Xóa công việc"
+                                                                title={t('adminJobs.actions.delete')}
                                                             >
                                                                 <FaTrash />
                                                             </button>
@@ -778,7 +792,7 @@ const AdminJobManagementPage = () => {
                             onClick={() => fetchData(page - 1)}
                             disabled={page === 0}
                         >
-                            Trang trước
+                            {t('jobListing.pagination.prev')}
                         </button>
                         {[...Array(totalPages)].map((_, idx) => (
                             <button
@@ -794,7 +808,7 @@ const AdminJobManagementPage = () => {
                             onClick={() => fetchData(page + 1)}
                             disabled={page === totalPages - 1}
                         >
-                            Trang sau
+                            {t('jobListing.pagination.next')}
                         </button>
                     </div>
                 )}

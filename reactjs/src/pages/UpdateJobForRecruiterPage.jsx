@@ -9,7 +9,7 @@ const UpdateJobForRecruiterPage = () => {
         jobId: jobId,
         title: "",
         description: "",
-        location: "",
+        locationId: "",
         salary: "",
         quantity: 1,
         expiredAt: "",
@@ -60,7 +60,7 @@ const UpdateJobForRecruiterPage = () => {
                 jobId: jobId,
                 title: job.title || "",
                 description: job.description || "",
-                location: job.location || "",
+                locationId: job.location.locationId || "",
                 salary: job.salary ? job.salary.toString() : "",
                 quantity: job.quantity || 1,
                 expiredAt: formatDateForInput(job.expiredAt),
@@ -97,6 +97,7 @@ const UpdateJobForRecruiterPage = () => {
         try {
             const jobData = {
                 ...formData,
+                locationId: formData.locationId || null,
                 userId: currentUser.userId, // Đảm bảo userId vẫn là current user
                 salary: formData.salary ? parseInt(formData.salary) : null,
                 quantity: parseInt(formData.quantity),
@@ -105,6 +106,8 @@ const UpdateJobForRecruiterPage = () => {
                 industryId: formData.industryId ? parseInt(formData.industryId) : null,
                 expiredAt: formData.expiredAt ? new Date(formData.expiredAt).toISOString() : null
             };
+
+            console.log("Submitting job data:", jobData);
 
             await authApis().patch(endpoints.updateJob(jobId), jobData);
             alert("Cập nhật tin tuyển dụng thành công!");
@@ -179,20 +182,6 @@ const UpdateJobForRecruiterPage = () => {
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                                     placeholder="Nhập tiêu đề công việc..."
                                     required
-                                    maxLength={255}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Địa điểm
-                                </label>
-                                <input
-                                    type="text"
-                                    name="location"
-                                    value={formData.location}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                                    placeholder="Nhập địa điểm..."
                                     maxLength={255}
                                 />
                             </div>

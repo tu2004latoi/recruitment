@@ -3,6 +3,8 @@ package com.dtt.specification;
 import com.dtt.model.Job;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.util.List;
+
 public class JobSpecification {
 
     public static Specification<Job> hasTitle(String title) {
@@ -46,4 +48,33 @@ public class JobSpecification {
                 status == null ? null :
                         cb.equal(root.get("status"), status);
     }
+
+    public static Specification<Job> isFeatured(Boolean isFeatured) {
+        return (root, query, cb) ->
+                isFeatured == null ? null :
+                        cb.equal(root.get("isFeatured"), isFeatured);
+    }
+
+    public static Specification<Job> viewsCountGreaterThanOrEqual(Integer minViews) {
+        return (root, query, cb) ->
+                minViews == null ? null :
+                        cb.greaterThanOrEqualTo(root.get("viewsCount"), minViews);
+    }
+
+    public static Specification<Job> applicationCountGreaterThanOrEqual(Integer minApplications) {
+        return (root, query, cb) ->
+                minApplications == null ? null :
+                        cb.greaterThanOrEqualTo(root.get("applicationCount"), minApplications);
+    }
+
+    public static Specification<Job> hasLevelIn(List<Integer> levelIds) {
+        return (root, query, cb) -> {
+            if (levelIds == null || levelIds.isEmpty()) {
+                return null;
+            }
+            return root.get("level").get("levelId").in(levelIds);
+        };
+    }
+
+
 }

@@ -7,6 +7,7 @@ export const endpoints = {
   login: "/login",
   currentUser: "/secure/profile",
   updateCurrentUser: "/secure/profile/update",
+  changePassword: "/secure/profile/change-password",
 
   // Register
   registerApplicant: "/register/applicant",
@@ -30,6 +31,9 @@ export const endpoints = {
 
   createAdmin: "/users/admins/add",
   updateAdmin: (id) => `/users/admins/${id}/update`,
+  statisticUser: "/admin/statistics/users",
+  statisticJob: "/admin/statistics/jobs",
+  statisticApplication: "/admin/statistics/applications",
 
   createModerator: "/users/moderators/add",
   updateModerator: (id) => `/users/moderators/${id}/update`,
@@ -39,6 +43,8 @@ export const endpoints = {
   updateRecruiter: (id) => `/users/recruiters/${id}/update`,
   getRecruiterProfile: "/secure/recruiter/profile",
   updateRecruiterProfile: "/secure/recruiter/profile/update",
+  recruiterStatisticJobs: "/recruiter/statistics/jobs",
+  recruiterStatisticApplications: "/recruiter/statistics/applications",
   
   createApplicant: "/users/applicants/add",
   updateApplicant: (id) => `/users/applicants/${id}/update`,
@@ -85,6 +91,9 @@ export const endpoints = {
   getJobsByRecruiter: (userId) => `/users/recruiters/${userId}/jobs`,
   getJobDetailsByRecruiter: (userId, jobId) => `/users/recruiters/${userId}/jobs/${jobId}`,
   jobSearch: "/jobs/search",
+  incrementViewCountJob: (id) => `/jobs/${id}/increment-view`,
+  incrementViewCountApplication: (id) => `/jobs/${id}/increment-view-applications`,
+  suitableJobs: (id) => `/jobs/suitable/${id}`,
 
   approveJob: (id) => `/jobs/${id}/approved`,
   rejectJob: (id) => `/jobs/${id}/rejected`,
@@ -124,6 +133,14 @@ export const endpoints = {
 
   // Notifications
   sendNotification: "/notifications/send",
+  sendUserNotification: "/notifications/send-user",
+
+  registerDevice: "/devices/register",
+  getDevicesByUser: (userId) => `/devices/${userId}`,
+  removeDevice: (fcmToken) => `/devices/${fcmToken}`,
+
+  messagesPartners: (userId) => `/chat/partners/${userId}`,
+  messagesByPartner: (partnerId) => `/chat/messages/${partnerId}`,
 };
 
 export const authApis = () => {

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Apis, { endpoints } from "../configs/Apis";
+import { useTranslation } from "react-i18next";
 
 const RegisterPage = () => {
   const [form, setForm] = useState({
@@ -16,6 +17,11 @@ const RegisterPage = () => {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { t } = useTranslation();
+  const params = new URLSearchParams(location.search);
+  const role = (params.get('role') || 'APPLICANT').toUpperCase();
+  const isRecruiter = role === 'RECRUITER';
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -29,7 +35,7 @@ const RegisterPage = () => {
     e.preventDefault();
 
     if (form.password !== form.confirmPassword) {
-      setMessage("Mật khẩu không khớp!");
+      setMessage(t('register.messages.passwordMismatch'));
       return;
     }
 
@@ -49,14 +55,15 @@ const RegisterPage = () => {
     }
 
     try {
-      const res = await Apis.post(endpoints.registerApplicant, formData, {
+      const endpoint = isRecruiter ? endpoints.registerRecruiter : endpoints.registerApplicant;
+      const res = await Apis.post(endpoint, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      console.log("Đăng ký thành công:", res.data);
+      console.log("Register success:", res.data);
       navigate("/login");
     } catch (err) {
       console.error(err);
-      setMessage("Đăng ký thất bại!");
+      setMessage(t('register.messages.failed'));
     } finally {
       setIsLoading(false);
     }
@@ -78,9 +85,13 @@ const RegisterPage = () => {
               </svg>
             </div>
             <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Đăng ký tài khoản
+              {t('register.title')}
             </h2>
-            <p className="text-gray-600 mt-2">Tạo tài khoản mới để bắt đầu</p>
+            <p className="text-gray-600 mt-2">{t('register.subtitle')}</p>
+            <div className="mt-3 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
+                 style={{background: isRecruiter ? '#D1FAE5' : '#DBEAFE', color: isRecruiter ? '#065F46' : '#1E40AF'}}>
+              {isRecruiter ? (t('login.roles.recruiter') || 'Nhà tuyển dụng') : (t('login.roles.applicant') || 'Ứng viên')}
+            </div>
           </div>
 
           {message && (
@@ -92,29 +103,29 @@ const RegisterPage = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Họ</label>
+                <label className="block text-sm font-semibold text-gray-700">{t('register.labels.lastName')}</label>
                 <input 
                   name="lastName" 
                   value={form.lastName} 
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                  placeholder="Nhập họ"
+                  className="w-full px-4 py-3 pl-12 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                  placeholder={t('register.placeholders.lastName')}
                 />
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Tên</label>
+                <label className="block text-sm font-semibold text-gray-700">{t('register.labels.firstName')}</label>
                 <input 
                   name="firstName" 
                   value={form.firstName} 
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                  placeholder="Nhập tên"
+                  placeholder={t('register.placeholders.firstName')}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">Tên đăng nhập</label>
+              <label className="block text-sm font-semibold text-gray-700">{t('register.labels.username')}</label>
               <div className="relative">
                 <input 
                   name="username" 
@@ -122,7 +133,7 @@ const RegisterPage = () => {
                   value={form.username} 
                   onChange={handleChange}
                   className="w-full px-4 py-3 pl-12 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                  placeholder="Chọn tên đăng nhập"
+                  placeholder={t('register.placeholders.username')}
                 />
                 <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -131,7 +142,7 @@ const RegisterPage = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">Email</label>
+              <label className="block text-sm font-semibold text-gray-700">{t('register.labels.email')}</label>
               <div className="relative">
                 <input 
                   type="email" 
@@ -139,7 +150,7 @@ const RegisterPage = () => {
                   value={form.email} 
                   onChange={handleChange}
                   className="w-full px-4 py-3 pl-12 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                  placeholder="example@email.com"
+                  placeholder={t('register.placeholders.email')}
                 />
                 <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -148,14 +159,14 @@ const RegisterPage = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">Số điện thoại</label>
+              <label className="block text-sm font-semibold text-gray-700">{t('register.labels.phone')}</label>
               <div className="relative">
                 <input 
                   name="phone" 
                   value={form.phone} 
                   onChange={handleChange}
                   className="w-full px-4 py-3 pl-12 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                  placeholder="0123456789"
+                  placeholder={t('register.placeholders.phone')}
                 />
                 <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -164,7 +175,7 @@ const RegisterPage = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">Mật khẩu</label>
+              <label className="block text-sm font-semibold text-gray-700">{t('register.labels.password')}</label>
               <div className="relative">
                 <input 
                   type="password" 
@@ -173,7 +184,7 @@ const RegisterPage = () => {
                   value={form.password} 
                   onChange={handleChange}
                   className="w-full px-4 py-3 pl-12 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                  placeholder="Nhập mật khẩu"
+                  placeholder={t('register.placeholders.password')}
                 />
                 <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -182,7 +193,7 @@ const RegisterPage = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">Xác nhận mật khẩu</label>
+              <label className="block text-sm font-semibold text-gray-700">{t('register.labels.confirmPassword')}</label>
               <div className="relative">
                 <input 
                   type="password" 
@@ -191,7 +202,7 @@ const RegisterPage = () => {
                   value={form.confirmPassword} 
                   onChange={handleChange}
                   className="w-full px-4 py-3 pl-12 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                  placeholder="Nhập lại mật khẩu"
+                  placeholder={t('register.placeholders.confirmPassword')}
                 />
                 <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -200,7 +211,7 @@ const RegisterPage = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">Tệp đính kèm (nếu có)</label>
+              <label className="block text-sm font-semibold text-gray-700">{t('register.labels.attachment')}</label>
               <div className="relative">
                 <input 
                   type="file" 
@@ -224,22 +235,22 @@ const RegisterPage = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Đang đăng ký...
+                  {t('register.buttons.registering')}
                 </div>
               ) : (
-                "Đăng ký"
+                t('register.buttons.register')
               )}
             </button>
           </form>
 
           <div className="mt-8 text-center">
             <p className="text-gray-600">
-              Đã có tài khoản?{" "}
+              {t('register.prompts.haveAccount')}{" "}
               <button 
                 onClick={() => navigate("/login")}
                 className="text-blue-600 hover:text-blue-700 font-semibold transition-colors duration-200"
               >
-                Đăng nhập ngay
+                {t('register.prompts.loginNow')}
               </button>
             </p>
           </div>

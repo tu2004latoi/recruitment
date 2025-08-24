@@ -12,9 +12,14 @@ public class FirebaseMessagingService {
                 .setBody(body)
                 .build();
 
+        WebpushConfig webpushConfig = WebpushConfig.builder()
+                .setNotification(new WebpushNotification(title, body))
+                .build();
+
         Message message = Message.builder()
                 .setToken(fcmToken)
                 .setNotification(notification)
+                .setWebpushConfig(webpushConfig)
                 .build();
 
         String response = FirebaseMessaging.getInstance().send(message);

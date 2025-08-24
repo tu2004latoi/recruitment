@@ -1,32 +1,81 @@
-import { FaQuestionCircle, FaShieldAlt, FaEnvelope } from 'react-icons/fa';
+import { FaBriefcase, FaShieldAlt, FaEnvelope, FaFacebookF, FaTwitter, FaLinkedinIn } from 'react-icons/fa';
 
 const Footer = () => {
-    return (
-        <footer className="bg-gray-800 text-white py-2 fixed bottom-0 left-0 w-full z-[9999]">
-            <div className="flex flex-col md:flex-row justify-between items-center max-w-full mx-0 px-4">
-                <p className="mb-2 md:mb-0 text-sm font-semibold">
-                    Copyright © {new Date().getFullYear()}
-                </p>
-                <ul className="flex flex-row space-x-6 mb-2 md:mb-0 text-sm font-semibold">
-                    <li>
-                        <a href="/" className="flex items-center text-white hover:text-blue-400 px-2 py-1 no-underline font-semibold">
-                            <FaQuestionCircle className="mr-2" /> Support
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/" className="flex items-center text-white hover:text-blue-400 px-2 py-1 no-underline font-semibold">
-                            <FaShieldAlt className="mr-2" /> Policy
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/" className="flex items-center text-white hover:text-blue-400 px-2 py-1 no-underline font-semibold">
-                            <FaEnvelope className="mr-2" /> Contact
-                        </a>
-                    </li>
-                </ul>
+  return (
+    <footer className="bg-gray-900 text-gray-300 w-full shadow-lg">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+          {/* Cột 1 - Logo & Brand */}
+          <div>
+            <h2 className="text-xl font-bold text-white">TopJob</h2>
+            <p className="mt-2 text-sm text-gray-400">
+              Nền tảng tìm việc & tuyển dụng hiện đại, kết nối ứng viên và nhà tuyển dụng dễ dàng.
+            </p>
+          </div>
+
+          {/* Cột 2 - Navigation */}
+          <div className="flex flex-col space-y-3">
+            <a
+              href="/jobs"
+              className="flex items-center hover:text-blue-400 transition-colors"
+            >
+              <FaBriefcase className="mr-2" /> Việc làm
+            </a>
+            <a
+              href="/policy"
+              className="flex items-center hover:text-blue-400 transition-colors"
+            >
+              <FaShieldAlt className="mr-2" /> Chính sách
+            </a>
+            <a
+              href="/contact"
+              className="flex items-center hover:text-blue-400 transition-colors"
+            >
+              <FaEnvelope className="mr-2" /> Liên hệ
+            </a>
+          </div>
+
+          {/* Cột 3 - Social */}
+          <div>
+            <h3 className="text-sm font-semibold text-white mb-3">Kết nối với chúng tôi</h3>
+            <div className="flex space-x-4">
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-700 hover:bg-blue-600 transition-colors"
+              >
+                <FaFacebookF />
+              </a>
+              <a
+                href="https://twitter.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-700 hover:bg-sky-500 transition-colors"
+              >
+                <FaTwitter />
+              </a>
+              <a
+                href="https://linkedin.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-700 hover:bg-blue-500 transition-colors"
+              >
+                <FaLinkedinIn />
+              </a>
             </div>
-        </footer>
-    );
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-gray-700 mt-8 pt-4 flex flex-col md:flex-row items-center justify-between text-sm text-gray-400">
+          <p>© {new Date().getFullYear()} TopJob. All rights reserved.</p>
+          <p className="mt-2 md:mt-0">Made with ❤️ by TopJob Team</p>
+        </div>
+      </div>
+    </footer>
+  );
 };
 
 export default Footer;

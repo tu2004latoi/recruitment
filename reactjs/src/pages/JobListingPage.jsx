@@ -6,6 +6,8 @@ import { MyUserContext } from "../configs/MyContexts";
 import LocationService from "../services/LocationService";
 import LocationDisplay from "../components/LocationDisplay";
 
+import { useTranslation } from "react-i18next";
+
 const JobListingPage = () => {
     const [jobs, setJobs] = useState([]);
     const [filteredJobs, setFilteredJobs] = useState([]);
@@ -15,6 +17,10 @@ const JobListingPage = () => {
     const [selectedJobType, setSelectedJobType] = useState("");
     const [selectedIndustry, setSelectedIndustry] = useState("");
     const [selectedSalary, setSelectedSalary] = useState("");
+    const [isFeatured, setIsFeatured] = useState(false);
+    const [myLevelOnly, setMyLevelOnly] = useState(false);
+    const [sortBy, setSortBy] = useState(""); // '', 'viewsCount', 'applicationCount'
+    const [sortDirection] = useState("desc");
     const [levels, setLevels] = useState([]);
     const [jobTypes, setJobTypes] = useState([]);
     const [industries, setIndustries] = useState([]);
@@ -24,6 +30,7 @@ const JobListingPage = () => {
     const [size] = useState(6); // Số lượng job mỗi trang
     const navigate = useNavigate();
     const user = useContext(MyUserContext);
+    const { t } = useTranslation();
 
     useEffect(() => {
         fetchData(0);
@@ -46,15 +53,24 @@ const JobListingPage = () => {
                 page: pageNumber,
                 size,
             };
-            if (searchTerm) params.title = searchTerm;
-            if (selectedLevel) params.levelId = selectedLevel;
-            if (selectedJobType) params.jobTypeId = selectedJobType;
-            if (selectedIndustry) params.industryId = selectedIndustry;
-            if (selectedSalary) params.salary = selectedSalary;
+            const useSuitable = myLevelOnly && user && user.userId;
+            if (!useSuitable) {
+                if (searchTerm) params.title = searchTerm;
+                if (selectedLevel) params.levelId = selectedLevel;
+                if (selectedJobType) params.jobTypeId = selectedJobType;
+                if (selectedIndustry) params.industryId = selectedIndustry;
+                if (selectedSalary) params.salary = selectedSalary;
+                if (isFeatured) params.isFeatured = true;
+                if (sortBy) {
+                    params.sortBy = sortBy; // 'viewsCount' | 'applicationCount'
+                    params.sortDirection = sortDirection; // 'desc'
+                }
+            }
             // Có thể bổ sung locationId nếu muốn
 
             // Gọi API searchJobs
-            const jobsRes = await authApis().get(endpoints["jobSearch"], { params });
+            const url = useSuitable ? endpoints["suitableJobs"](user.userId) : endpoints["jobSearch"];
+            const jobsRes = await authApis().get(url, { params });
             const jobsPage = jobsRes.data;
             const jobsArr = Array.isArray(jobsPage.content) ? jobsPage.content : [];
             // Chỉ lấy job active và đã duyệt (nếu muốn)
@@ -67,7 +83,7 @@ const JobListingPage = () => {
                             job.location = LocationService.formatLocation(locationRes);
                         } catch (locationErr) {
                             console.error("Failed to fetch location for job:", job.jobId, locationErr);
-                            job.location = "Không xác định";
+                            job.location = t('jobListing.labels.unknown');
                         }
                     }
                     return job;
@@ -90,7 +106,7 @@ const JobListingPage = () => {
             setIndustries(industriesRes.data);
         } catch (err) {
             console.error("Failed to fetch data:", err);
-            alert("Không thể tải danh sách công việc!");
+            alert(t('jobListing.alerts.loadFailed'));
         } finally {
             setIsLoading(false);
         }
@@ -129,21 +145,21 @@ const JobListingPage = () => {
 
         // Filter by level
         if (selectedLevel) {
-            filtered = filtered.filter(job => 
+            filtered = filtered.filter(job =>
                 job.level?.levelId?.toString() === selectedLevel
             );
         }
 
         // Filter by job type
         if (selectedJobType) {
-            filtered = filtered.filter(job => 
+            filtered = filtered.filter(job =>
                 job.jobType?.jobTypeId?.toString() === selectedJobType
             );
         }
 
         // Filter by industry
         if (selectedIndustry) {
-            filtered = filtered.filter(job => 
+            filtered = filtered.filter(job =>
                 job.industry?.industryId?.toString() === selectedIndustry
             );
         }
@@ -157,16 +173,19 @@ const JobListingPage = () => {
         setSelectedJobType("");
         setSelectedIndustry("");
         setSelectedSalary("");
+        setIsFeatured(false);
+        setSortBy("");
+        setMyLevelOnly(false);
     };
 
     const formatDate = (dateString) => {
-        if (!dateString) return "N/A";
+        if (!dateString) return t('jobListing.labels.unknown');
         return new Date(dateString).toLocaleDateString('vi-VN');
     };
 
     const formatSalary = (salary) => {
-        if (!salary) return "Thỏa thuận";
-        return new Intl.NumberFormat('vi-VN').format(salary) + " VNĐ";
+        if (!salary) return t('jobDetail.salary.negotiable');
+        return new Intl.NumberFormat('vi-VN').format(salary) + " " + t('jobDetail.currency.vnd');
     };
 
     const getTimeAgo = (dateString) => {
@@ -175,11 +194,11 @@ const JobListingPage = () => {
         const jobDate = new Date(dateString);
         const diffTime = Math.abs(now - jobDate);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-        if (diffDays === 1) return "Hôm nay";
-        if (diffDays <= 7) return `${diffDays} ngày trước`;
-        if (diffDays <= 30) return `${Math.floor(diffDays / 7)} tuần trước`;
-        return `${Math.floor(diffDays / 30)} tháng trước`;
+
+        if (diffDays === 1) return t('jobDetail.time.today');
+        if (diffDays <= 7) return t('jobDetail.time.daysAgo', { count: diffDays });
+        if (diffDays <= 30) return t('jobDetail.time.weeksAgo', { count: Math.floor(diffDays / 7) });
+        return t('jobDetail.time.monthsAgo', { count: Math.floor(diffDays / 30) });
     };
 
     const handleJobClick = (jobId) => {
@@ -191,7 +210,7 @@ const JobListingPage = () => {
         setPage(0);
         fetchData(0);
         // eslint-disable-next-line
-    }, [searchTerm, selectedLevel, selectedJobType, selectedIndustry, selectedSalary]);
+    }, [searchTerm, selectedLevel, selectedJobType, selectedIndustry, selectedSalary, isFeatured, sortBy, myLevelOnly]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
@@ -211,7 +230,7 @@ const JobListingPage = () => {
                             <p className="text-gray-500 text-sm">Tìm thấy {filteredJobs.length} công việc phù hợp</p>
                         </div>
                     </div>
-                    {user && (
+                    {user && user.role === "RECRUITER" && (
                         <button
                             onClick={() => navigate("/recruiter")}
                             className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
@@ -246,7 +265,7 @@ const JobListingPage = () => {
                         </button>
 
                         {/* Clear Filters */}
-                        {(searchTerm || selectedLevel || selectedJobType || selectedIndustry || selectedSalary) && (
+                        {(searchTerm || selectedLevel || selectedJobType || selectedIndustry || selectedSalary || isFeatured || sortBy || myLevelOnly) && (
                             <button
                                 onClick={clearFilters}
                                 className="px-6 py-3 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-all duration-200"
@@ -325,6 +344,44 @@ const JobListingPage = () => {
                                     />
                                 </div>
                             </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        id="isFeatured"
+                                        type="checkbox"
+                                        checked={isFeatured}
+                                        onChange={(e) => setIsFeatured(e.target.checked)}
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <label htmlFor="isFeatured" className="text-sm font-medium text-gray-700">
+                                        Chỉ hiển thị tin nổi bật
+                                    </label>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        id="myLevelOnly"
+                                        type="checkbox"
+                                        checked={myLevelOnly}
+                                        onChange={(e) => setMyLevelOnly(e.target.checked)}
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <label htmlFor="myLevelOnly" className="text-sm font-medium text-gray-700">
+                                        Công việc phù hợp với trình độ của tôi
+                                    </label>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Sắp xếp</label>
+                                    <select
+                                        value={sortBy}
+                                        onChange={(e) => setSortBy(e.target.value)}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    >
+                                        <option value="">Mặc định</option>
+                                        <option value="viewsCount">Lượt xem từ cao đến thấp</option>
+                                        <option value="applicationCount">Lượt ứng tuyển từ cao đến thấp</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -382,7 +439,7 @@ const JobListingPage = () => {
                                                     {job.isFeatured && (
                                                         <div className="flex items-center gap-1 text-yellow-500">
                                                             <FaStar />
-                                                            <span className="text-xs font-medium">Nổi bật</span>
+                                                            <span className="text-xs font-medium">{t('jobListing.labels.featured')}</span>
                                                         </div>
                                                     )}
                                                 </div>
@@ -412,15 +469,15 @@ const JobListingPage = () => {
                                                     <div className="flex items-center gap-4 text-sm text-gray-600">
                                                         <div className="flex items-center gap-1">
                                                             <FaUsers className="text-purple-500" />
-                                                            <span>Số lượng: {job.quantity}</span>
+                                                            <span>{t('jobListing.metrics.quantity', { count: job.quantity })}</span>
                                                         </div>
                                                         <div className="flex items-center gap-1">
                                                             <FaEye className="text-blue-500" />
-                                                            <span>Lượt xem: {job.viewsCount || 0}</span>
+                                                            <span>{t('jobListing.metrics.views', { count: job.viewsCount || 0 })}</span>
                                                         </div>
                                                         <div className="flex items-center gap-1">
                                                             <FaUsers className="text-green-500" />
-                                                            <span>Ứng tuyển: {job.applicationCount || 0}</span>
+                                                            <span>{t('jobListing.metrics.applications', { count: job.applicationCount || 0 })}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -448,7 +505,7 @@ const JobListingPage = () => {
                                             
                                             <div className="flex items-center gap-2 text-xs text-gray-500">
                                                 <FaCalendarAlt />
-                                                <span>Hết hạn: {formatDate(job.expiredAt)}</span>
+                                                <span>{t('jobListing.labels.expiresAt', { date: formatDate(job.expiredAt) })}</span>
                                                 {job.createdAt && (
                                                     <>
                                                         <FaClock />
@@ -472,7 +529,7 @@ const JobListingPage = () => {
                             onClick={() => setPage(page - 1)}
                             disabled={page === 0}
                         >
-                            Trang trước
+                            {t('jobListing.pagination.prev')}
                         </button>
                         {[...Array(totalPages)].map((_, idx) => (
                             <button
@@ -488,7 +545,7 @@ const JobListingPage = () => {
                             onClick={() => setPage(page + 1)}
                             disabled={page === totalPages - 1}
                         >
-                            Trang sau
+                            {t('jobListing.pagination.next')}
                         </button>
                     </div>
                 )}

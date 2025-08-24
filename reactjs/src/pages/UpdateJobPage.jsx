@@ -110,7 +110,7 @@ const UpdateJobPage = () => {
             }
 
             console.log("Job data being sent:", jobData);
-            await authApis().put(endpoints.updateJob(jobId), jobData);
+            await authApis().patch(endpoints.updateJob(jobId), jobData);
             alert("Cập nhật công việc thành công!");
             navigate("/admin/jobs");
         } catch (err) {

@@ -11,6 +11,7 @@ import com.dtt.service.JobService;
 import com.dtt.service.UserService;
 import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -62,6 +63,28 @@ public class ApiApplicationController {
         }).toList();
 
         return ResponseEntity.ok(applicationDTOs);
+    }
+
+    @GetMapping("/applications/my/{id}")
+    public ResponseEntity<ApplicationDTO> getMyApplicationById(@PathVariable int id, Principal principal){
+        String username = principal.getName();
+        User user = userService.getUserByUsername(username);
+
+        Application application = applicationService.getApplicationById(id);
+        if (application == null || !application.getUser().getUserId().equals(user.getUserId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // Không cho xem dữ liệu người khác
+        }
+
+        ApplicationDTO dto = new ApplicationDTO();
+        dto.setApplicationId(application.getApplicationId());
+        dto.setUserId(application.getUser().getUserId());
+        dto.setJobId(application.getJob().getJobId());
+        dto.setAppliedAt(application.getAppliedAt());
+        dto.setCoverLetter(application.getCoverLetter());
+        dto.setStatus(application.getStatus());
+        dto.setInterviewScheduleSent(application.getInterviewScheduleSent());
+
+        return ResponseEntity.ok(dto);
     }
 
 

@@ -1,11 +1,14 @@
 package com.dtt.controller;
 
+import com.dtt.dto.ChangePasswordDTO;
 import com.dtt.dto.LoginDTO;
 import com.dtt.dto.PublicUserDTO;
 import com.dtt.dto.UserDTO;
 import com.dtt.model.Applicant;
+import com.dtt.model.Recruiter;
 import com.dtt.model.User;
 import com.dtt.service.ApplicantService;
+import com.dtt.service.RecruiterService;
 import com.dtt.service.UserService;
 import com.dtt.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +30,9 @@ public class ApiUserController {
 
     @Autowired
     private ApplicantService applicantService;
+
+    @Autowired
+    private RecruiterService recruiterService;
 
     @GetMapping("/users")
     public ResponseEntity<List<User>> getAllUser(){
@@ -69,7 +75,6 @@ public class ApiUserController {
         return ResponseEntity.ok(this.userService.addOrUpdateUser(user));
     }
 
-
     @PatchMapping("/users/{id}/update")
     public ResponseEntity<User> updateUser(@ModelAttribute UserDTO userDTO, @PathVariable int id){
         User user = this.userService.getUserById(id);
@@ -109,7 +114,7 @@ public class ApiUserController {
     }
 
     @PostMapping("/register/applicant")
-    public ResponseEntity<Applicant> register(@ModelAttribute UserDTO userDTO){
+    public ResponseEntity<Applicant> registerApplicant(@ModelAttribute UserDTO userDTO){
         User user = new User();
         user.setUsername(userDTO.getUsername());
         user.setPassword(userDTO.getPassword());
@@ -128,6 +133,28 @@ public class ApiUserController {
         applicant.setUser(user);
 
         return ResponseEntity.ok(this.applicantService.addApplicant(applicant));
+    }
+
+    @PostMapping("register/recruiter")
+    public ResponseEntity<Recruiter> registerRecruiter(@ModelAttribute UserDTO userDTO){
+        User user = new User();
+        user.setUsername(userDTO.getUsername());
+        user.setPassword(userDTO.getPassword());
+        user.setEmail(userDTO.getEmail());
+        user.setFirstName(userDTO.getFirstName());
+        user.setLastName(userDTO.getLastName());
+        user.setPhone(userDTO.getPhone());
+        user.setRole(User.Role.RECRUITER);
+        user.setProvider(User.Provider.LOCAL);
+        user.setProviderId(null);
+        user.setFile(userDTO.getFile());
+        user.setCreatedAt(LocalDateTime.now());
+
+        this.userService.addOrUpdateUser(user);
+        Recruiter recruiter = new Recruiter();
+        recruiter.setUser(user);
+
+        return ResponseEntity.ok(this.recruiterService.addRecruiter(recruiter));
     }
 
 
@@ -151,5 +178,21 @@ public class ApiUserController {
 
 
         return ResponseEntity.ok(this.userService.addOrUpdateUser(user));
+    }
+
+    @PatchMapping("/secure/profile/change-password")
+    @ResponseBody
+    @CrossOrigin
+    public ResponseEntity<?> changePassword(Principal principal, @RequestBody ChangePasswordDTO changePasswordDTO){
+        User user = this.userService.getUserByUsername(principal.getName());
+        if (this.userService.authenticate(user.getUsername(), changePasswordDTO.getCurrentPassword())) {
+            user.setPassword(changePasswordDTO.getNewPassword());
+
+            return ResponseEntity.ok(this.userService.changePasswordUser(user));
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body("Mật khẩu cũ không khớp");
     }
 }

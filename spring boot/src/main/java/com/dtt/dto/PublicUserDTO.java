@@ -8,4 +8,8 @@ public class PublicUserDTO {
     private String firstName;
     private String lastName;
     private String email;
+
+    public String getName(){
+        return firstName + lastName;
+    }
 }

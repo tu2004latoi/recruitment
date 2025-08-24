@@ -22,8 +22,10 @@ import {
     FaSpinner
 } from "react-icons/fa";
 import { MyUserContext } from "../configs/MyContexts";
+import { useTranslation } from "react-i18next";
 
 const RecruiterApplicationManagementPage = () => {
+    const { t } = useTranslation();
     // Interview scheduling form component
     const InterviewForm = ({ userId, jobId, applicationId, onSuccess, onCancel }) => {
         const [province, setProvince] = useState("");
@@ -50,20 +52,27 @@ const RecruiterApplicationManagementPage = () => {
                 // 2. Post interview
                 await authApis().post(endpoints.createInterview, {
                     userId,
-                    jobId, // đảm bảo jobId có giá trị
+                    jobId,
                     locationId,
                     scheduledAt,
                     notes,
                     status: "SCHEDULED",
+                });
+
+                await authApis().post(endpoints.sendUserNotification, {
+                    title: "Bạn đã nhận được lịch phỏng vấn từ nhà tuyển dụng",
+                    body: "Phỏng vấn đã được đặt vào ngày " + dayjs(scheduledAt).format("DD/MM/YYYY HH:mm") + 
+                    ", vui lòng vào hệ thống để xem chi tiết",
+                    userId: userId,
                 });
                 // 3. PATCH sent-interview
                 if (applicationId) {
                   await authApis().patch(endpoints.sentInterview(applicationId));
                 }
                 onSuccess && onSuccess();
-                alert("Đã gửi lịch phỏng vấn thành công!");
+                alert(t('recruiterApps.alerts.sendInterviewSuccess'));
             } catch (err) {
-                setError("Gửi lịch phỏng vấn thất bại!");
+                setError(t('recruiterApps.alerts.sendInterviewFailed'));
             } finally {
                 setLoading(false);
             }
@@ -74,21 +83,21 @@ const RecruiterApplicationManagementPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <input
                         className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                        placeholder="Tỉnh/Thành"
+                        placeholder={t('recruiterApps.form.province')}
                         value={province}
                         onChange={e => setProvince(e.target.value)}
                         required
                     />
                     <input
                         className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                        placeholder="Quận/Huyện"
+                        placeholder={t('recruiterApps.form.district')}
                         value={district}
                         onChange={e => setDistrict(e.target.value)}
                         required
                     />
                     <input
                         className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition md:col-span-2"
-                        placeholder="Địa chỉ cụ thể"
+                        placeholder={t('recruiterApps.form.address')}
                         value={address}
                         onChange={e => setAddress(e.target.value)}
                         required
@@ -105,7 +114,7 @@ const RecruiterApplicationManagementPage = () => {
 
                 <textarea
                     className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition w-full resize-y min-h-[70px]"
-                    placeholder="Ghi chú"
+                    placeholder={t('recruiterApps.form.notes')}
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
                 />
@@ -118,14 +127,14 @@ const RecruiterApplicationManagementPage = () => {
                         className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                         disabled={loading}
                     >
-                        {loading ? "Đang gửi..." : "Gửi lịch phỏng vấn"}
+                        {loading ? t('recruiterApps.buttons.sending') : t('recruiterApps.buttons.sendInterview')}
                     </button>
                     <button
                         type="button"
                         className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition text-sm"
                         onClick={onCancel}
                     >
-                        Huỷ
+                        {t('recruiterApps.buttons.cancel')}
                     </button>
                 </div>
             </form>
@@ -189,29 +198,29 @@ const RecruiterApplicationManagementPage = () => {
 
             setApplications(applicationsWithDetails);
         } catch (err) {
-            console.error("Không thể tải danh sách đơn ứng tuyển:", err);
-            alert("Không thể tải danh sách đơn ứng tuyển!");
+            console.error("Failed to load applications:", err);
+            alert(t('recruiterApps.alerts.loadFailed'));
         } finally {
             setIsLoading(false);
         }
     };
 
     const formatDate = (dateString) => {
-        if (!dateString) return "N/A";
+        if (!dateString) return t('jobListing.labels.unknown');
         return new Date(dateString).toLocaleDateString('vi-VN');
     };
 
     const formatSalary = (salary) => {
-        if (!salary) return "Thỏa thuận";
-        return new Intl.NumberFormat('vi-VN').format(salary) + " VNĐ";
+        if (!salary) return t('jobDetail.salary.negotiable');
+        return new Intl.NumberFormat('vi-VN').format(salary) + " " + t('jobDetail.currency.vnd');
     };
 
     const getStatusBadge = (status) => {
         const statusConfig = {
-            'PENDING': { color: 'bg-yellow-100 text-yellow-800', icon: FaClock, text: 'Chờ xử lý' },
-            'ACCEPTED': { color: 'bg-green-100 text-green-800', icon: FaCheckCircle, text: 'Đã chấp nhận' },
-            'REJECTED': { color: 'bg-red-100 text-red-800', icon: FaTimesCircle, text: 'Đã từ chối' },
-            'INTERVIEW': { color: 'bg-blue-100 text-blue-800', icon: FaUser, text: 'Phỏng vấn' }
+            'PENDING': { color: 'bg-yellow-100 text-yellow-800', icon: FaClock, text: t('recruiterApps.status.pending') },
+            'ACCEPTED': { color: 'bg-green-100 text-green-800', icon: FaCheckCircle, text: t('recruiterApps.status.accepted') },
+            'REJECTED': { color: 'bg-red-100 text-red-800', icon: FaTimesCircle, text: t('recruiterApps.status.rejected') },
+            'INTERVIEW': { color: 'bg-blue-100 text-blue-800', icon: FaUser, text: t('recruiterApps.status.interview') }
         };
 
         const config = statusConfig[status] || statusConfig['PENDING'];
@@ -233,8 +242,8 @@ const RecruiterApplicationManagementPage = () => {
     const handleAcceptApplication = async (application) => {
         const isRejected = application.status === 'REJECTED';
         const confirmMessage = isRejected
-            ? "Bạn có chắc chắn muốn chấp nhận lại đơn ứng tuyển đã bị từ chối này? Hành động này sẽ thay đổi trạng thái từ 'Đã từ chối' thành 'Đã chấp nhận'."
-            : "Bạn có chắc chắn muốn chấp nhận đơn ứng tuyển này?";
+            ? t('recruiterApps.alerts.acceptAgainConfirm')
+            : t('recruiterApps.alerts.acceptConfirm');
 
         if (!window.confirm(confirmMessage)) return;
 
@@ -253,13 +262,13 @@ const RecruiterApplicationManagementPage = () => {
             }
 
             const successMessage = isRejected
-                ? "Đã chấp nhận lại đơn ứng tuyển đã bị từ chối và gửi email thông báo!"
-                : "Đã chấp nhận đơn ứng tuyển và gửi email thông báo!";
+                ? t('recruiterApps.alerts.acceptAgainSuccess')
+                : t('recruiterApps.alerts.acceptSuccess');
             alert(successMessage);
             fetchApplications(); // Refresh the list
         } catch (err) {
-            console.error("Lỗi khi chấp nhận đơn ứng tuyển:", err);
-            alert("Có lỗi xảy ra khi chấp nhận đơn ứng tuyển!");
+            console.error("Error when accepting application:", err);
+            alert(t('recruiterApps.alerts.acceptError'));
         } finally {
             setProcessingApplication(null);
         }
@@ -268,8 +277,8 @@ const RecruiterApplicationManagementPage = () => {
     const handleRejectApplication = async (application) => {
         const isAccepted = application.status === 'ACCEPTED';
         const confirmMessage = isAccepted
-            ? "Bạn có chắc chắn muốn từ chối đơn ứng tuyển đã được chấp nhận này? Hành động này sẽ thay đổi trạng thái từ 'Đã chấp nhận' thành 'Đã từ chối'."
-            : "Bạn có chắc chắn muốn từ chối đơn ứng tuyển này?";
+            ? t('recruiterApps.alerts.rejectAgainConfirm')
+            : t('recruiterApps.alerts.rejectConfirm');
 
         if (!window.confirm(confirmMessage)) return;
 
@@ -279,13 +288,13 @@ const RecruiterApplicationManagementPage = () => {
             await authApis().patch(endpoints.rejectedApplications(application.applicationId));
 
             const successMessage = isAccepted
-                ? "Đã từ chối đơn ứng tuyển đã được chấp nhận!"
-                : "Đã từ chối đơn ứng tuyển!";
+                ? t('recruiterApps.alerts.rejectAgainSuccess')
+                : t('recruiterApps.alerts.rejectSuccess');
             alert(successMessage);
             fetchApplications(); // Refresh the list
         } catch (err) {
-            console.error("Lỗi khi từ chối đơn ứng tuyển:", err);
-            alert("Có lỗi xảy ra khi từ chối đơn ứng tuyển!");
+            console.error("Error when rejecting application:", err);
+            alert(t('recruiterApps.alerts.rejectError'));
         } finally {
             setProcessingApplication(null);
         }
@@ -319,12 +328,12 @@ const RecruiterApplicationManagementPage = () => {
                             <FaEnvelope className="text-white text-3xl" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-blue-900">Quản lý đơn ứng tuyển</h1>
-                            <p className="text-gray-600 mt-1">Xem và xử lý các đơn ứng tuyển cho công việc của bạn</p>
+                            <h1 className="text-3xl font-bold text-blue-900">{t('recruiterApps.headers.title')}</h1>
+                            <p className="text-gray-600 mt-1">{t('recruiterApps.headers.subtitle')}</p>
                         </div>
                     </div>
                     <span className="text-sm text-gray-500">
-                    Tổng: <b>{applications.length}</b>
+                    {t('recruiterApps.labels.total')}: <b>{applications.length}</b>
                 </span>
                 </div>
 
@@ -335,11 +344,11 @@ const RecruiterApplicationManagementPage = () => {
                             <thead>
                             <tr className="bg-gradient-to-r from-blue-50 to-indigo-100 border-b-2 border-blue-200">
                                 <th className="px-4 py-3 text-center text-xs font-bold text-blue-700 uppercase tracking-wider">#</th>
-                                <th className="px-4 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Ứng viên</th>
-                                <th className="px-4 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Công việc</th>
-                                <th className="px-4 py-3 text-center text-xs font-bold text-blue-700 uppercase tracking-wider">Ngày ứng tuyển</th>
-                                <th className="px-4 py-3 text-center text-xs font-bold text-blue-700 uppercase tracking-wider">Trạng thái</th>
-                                <th className="px-4 py-3 text-center text-xs font-bold text-blue-700 uppercase tracking-wider">Hành động</th>
+                                <th className="px-4 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">{t('recruiterApps.table.applicant')}</th>
+                                <th className="px-4 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">{t('recruiterApps.table.job')}</th>
+                                <th className="px-4 py-3 text-center text-xs font-bold text-blue-700 uppercase tracking-wider">{t('recruiterApps.table.appliedAt')}</th>
+                                <th className="px-4 py-3 text-center text-xs font-bold text-blue-700 uppercase tracking-wider">{t('recruiterApps.table.status')}</th>
+                                <th className="px-4 py-3 text-center text-xs font-bold text-blue-700 uppercase tracking-wider">{t('recruiterApps.table.actions')}</th>
                             </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-100">
@@ -348,7 +357,7 @@ const RecruiterApplicationManagementPage = () => {
                                     <td colSpan={6} className="py-12 text-center text-gray-500">
                                         <div className="flex flex-col items-center">
                                             <FaEnvelope className="text-4xl mb-2 text-gray-300" />
-                                            <div>Chưa có đơn ứng tuyển nào</div>
+                                            <div>{t('recruiterApps.empty')}</div>
                                         </div>
                                     </td>
                                 </tr>
@@ -377,7 +386,7 @@ const RecruiterApplicationManagementPage = () => {
                                             {getStatusBadge(application.status)}
                                             {application.interviewScheduleSent === true && (
                                                 <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold mt-1">
-                                                    <FaCheckCircle className="text-green-500" /> Đã gửi lịch PV
+                                                    <FaCheckCircle className="text-green-500" /> {t('recruiterApps.badges.sentInterview')}
                                                 </div>
                                             )}
                                         </td>
@@ -386,7 +395,7 @@ const RecruiterApplicationManagementPage = () => {
                                                 <button
                                                     onClick={() => handleViewDetail(application)}
                                                     className="p-2 border border-blue-200 rounded hover:bg-blue-100 text-blue-600 transition"
-                                                    title="Xem chi tiết"
+                                                    title={t('recruiterApps.buttons.viewDetail')}
                                                 >
                                                     <FaEye />
                                                 </button>
@@ -395,7 +404,7 @@ const RecruiterApplicationManagementPage = () => {
                                                         onClick={() => handleAcceptApplication(application)}
                                                         disabled={processingApplication === application.applicationId}
                                                         className="p-2 border border-green-200 rounded hover:bg-green-100 text-green-600 transition disabled:opacity-50"
-                                                        title={application.status === 'REJECTED' ? "Chấp nhận lại" : "Chấp nhận"}
+                                                        title={application.status === 'REJECTED' ? t('recruiterApps.buttons.acceptAgain') : t('recruiterApps.buttons.accept')}
                                                     >
                                                         {processingApplication === application.applicationId
                                                             ? <FaSpinner className="animate-spin" />
@@ -410,7 +419,7 @@ const RecruiterApplicationManagementPage = () => {
                                                             ? "border-orange-200 hover:bg-orange-100 text-orange-600"
                                                             : "border-red-200 hover:bg-red-100 text-red-600"
                                                     }`}
-                                                    title={application.status === 'ACCEPTED' ? "Từ chối (Đã chấp nhận)" : "Từ chối"}
+                                                    title={application.status === 'ACCEPTED' ? t('recruiterApps.buttons.rejectAgain') : t('recruiterApps.buttons.reject')}
                                                 >
                                                     {processingApplication === application.applicationId
                                                         ? <FaSpinner className="animate-spin" />
@@ -428,8 +437,8 @@ const RecruiterApplicationManagementPage = () => {
                                                     ) : (
                                                         <button
                                                             onClick={() => setInterviewingAppId(application.applicationId)}
-                                                            className="p-2 border border-blue-200 rounded hover:bg-blue-100 text-blue-600 transition"
-                                                            title="Gửi lịch phỏng vấn"
+                                                            className="p-2 border border-indigo-200 rounded hover:bg-indigo-100 text-indigo-600 transition"
+                                                            title={t('recruiterApps.buttons.sendInterview')}
                                                         >
                                                             <FaCalendarAlt />
                                                         </button>
@@ -438,7 +447,7 @@ const RecruiterApplicationManagementPage = () => {
                                             </div>
                                         </td>
                                     </tr>
-                                ))
+                            ))
                             )}
                             </tbody>
                         </table>
@@ -450,7 +459,7 @@ const RecruiterApplicationManagementPage = () => {
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                         <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-lg">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-xl font-semibold text-gray-900">Chi tiết đơn ứng tuyển</h3>
+                                <h3 className="text-xl font-semibold text-gray-900">{t('recruiterApps.modal.title')}</h3>
                                 <button
                                     onClick={() => setShowDetailModal(false)}
                                     className="text-gray-400 hover:text-gray-600"
@@ -462,22 +471,22 @@ const RecruiterApplicationManagementPage = () => {
                             <div className="space-y-6">
                                 {/* Applicant Information */}
                                 <div className="bg-gray-50 rounded-lg p-4">
-                                    <h4 className="font-semibold text-gray-900 mb-3">Thông tin ứng viên</h4>
+                                    <h4 className="font-semibold text-gray-900 mb-3">{t('recruiterApps.modal.applicantInfo')}</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                                         <div>
-                                            <span className="font-medium">User ID:</span> {selectedApplication.userId}
+                                            <span className="font-medium">{t('recruiterApps.modal.userId')}:</span> {selectedApplication.userId}
                                         </div>
                                         <div>
-                                            <span className="font-medium">Họ tên:</span> {selectedApplication.userDetails ?
+                                            <span className="font-medium">{t('recruiterApps.modal.fullName')}:</span> {selectedApplication.userDetails ?
                                                 `${selectedApplication.userDetails.firstName} ${selectedApplication.userDetails.lastName}` :
-                                                "Không có thông tin"
+                                                t('recruiterApps.modal.noInfo')
                                             }
                                         </div>
                                         <div>
-                                            <span className="font-medium">Email:</span> {selectedApplication.userDetails?.email || "Không có"}
+                                            <span className="font-medium">Email:</span> {selectedApplication.userDetails?.email || t('recruiterApps.modal.none')}
                                         </div>
                                         <div>
-                                            <span className="font-medium">Vị trí:</span> {selectedApplication.jobDetails?.title || `Job ID: ${selectedApplication.jobId}`}
+                                            <span className="font-medium">{t('recruiterApps.modal.position')}:</span> {selectedApplication.jobDetails?.title || `Job ID: ${selectedApplication.jobId}`}
                                         </div>
                                         <div>
                                             <span className="font-medium">Job ID:</span> {selectedApplication.jobId}
@@ -487,16 +496,16 @@ const RecruiterApplicationManagementPage = () => {
 
                                 {/* Application Information */}
                                 <div className="bg-gray-50 rounded-lg p-4">
-                                    <h4 className="font-semibold text-gray-900 mb-3">Thông tin đơn ứng tuyển</h4>
+                                    <h4 className="font-semibold text-gray-900 mb-3">{t('recruiterApps.modal.applicationInfo')}</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                                         <div>
-                                            <span className="font-medium">ID đơn:</span> #{selectedApplication.applicationId}
+                                            <span className="font-medium">{t('recruiterApps.modal.applicationId')}:</span> #{selectedApplication.applicationId}
                                         </div>
                                         <div>
-                                            <span className="font-medium">Ngày ứng tuyển:</span> {formatDate(selectedApplication.appliedAt)}
+                                            <span className="font-medium">{t('recruiterApps.table.appliedAt')}:</span> {formatDate(selectedApplication.appliedAt)}
                                         </div>
                                         <div>
-                                            <span className="font-medium">Trạng thái:</span> {getStatusBadge(selectedApplication.status)}
+                                            <span className="font-medium">{t('recruiterApps.table.status')}:</span> {getStatusBadge(selectedApplication.status)}
                                         </div>
                                     </div>
                                 </div>
@@ -504,7 +513,7 @@ const RecruiterApplicationManagementPage = () => {
                                 {/* Cover Letter */}
                                 {selectedApplication.coverLetter && (
                                     <div className="bg-gray-50 rounded-lg p-4">
-                                        <h4 className="font-semibold text-gray-900 mb-3">Thư xin việc</h4>
+                                        <h4 className="font-semibold text-gray-900 mb-3">{t('recruiterApps.modal.coverLetter')}</h4>
                                         <p className="text-sm text-gray-700 whitespace-pre-wrap">
                                             {selectedApplication.coverLetter}
                                         </p>
@@ -514,7 +523,7 @@ const RecruiterApplicationManagementPage = () => {
                                 {/* Resume */}
                                 {selectedApplication.cv && (
                                     <div className="bg-gray-50 rounded-lg p-4">
-                                        <h4 className="font-semibold text-gray-900 mb-3">CV/Resume</h4>
+                                        <h4 className="font-semibold text-gray-900 mb-3">{t('recruiterApps.modal.resume')}</h4>
                                         <div className="flex items-center gap-2 text-sm">
                                             <FaFileAlt className="w-4 h-4 text-blue-600" />
                                             <a
@@ -523,7 +532,7 @@ const RecruiterApplicationManagementPage = () => {
                                                 rel="noopener noreferrer"
                                                 className="text-blue-600 hover:text-blue-800 underline font-medium"
                                             >
-                                                Xem CV/Resume
+                                                {t('recruiterApps.modal.viewResume')}
                                             </a>
                                         </div>
                                     </div>
@@ -546,7 +555,7 @@ const RecruiterApplicationManagementPage = () => {
                                                 ) : (
                                                     <FaCheck className="w-4 h-4" />
                                                 )}
-                                                {selectedApplication.status === 'REJECTED' ? 'Chấp nhận lại' : 'Chấp nhận'}
+                                                {selectedApplication.status === 'REJECTED' ? t('recruiterApps.buttons.acceptAgain') : t('recruiterApps.buttons.accept')}
                                             </button>
                                         )}
                                         <button
@@ -565,7 +574,7 @@ const RecruiterApplicationManagementPage = () => {
                                             ) : (
                                                 <FaBan className="w-4 h-4" />
                                             )}
-                                            {selectedApplication.status === 'ACCEPTED' ? 'Từ chối (Đã chấp nhận)' : 'Từ chối'}
+                                            {selectedApplication.status === 'ACCEPTED' ? t('recruiterApps.buttons.rejectAgain') : t('recruiterApps.buttons.reject')}
                                         </button>
                                     </div>
                                 )}
@@ -576,7 +585,7 @@ const RecruiterApplicationManagementPage = () => {
                                     onClick={() => setShowDetailModal(false)}
                                     className="bg-gray-200 text-gray-700 py-2 px-6 rounded-lg font-semibold hover:bg-gray-300 transition-all duration-200"
                                 >
-                                    Đóng
+                                    {t('recruiterApps.buttons.close')}
                                 </button>
                             </div>
                         </div>

@@ -55,10 +55,30 @@ public class ApiJobController {
             @RequestParam(required = false) Integer industryId,
             @RequestParam(required = false) Integer salary,
             @RequestParam(required = false) Job.Status status,
+            @RequestParam(required = false) Boolean isFeatured,
+            @RequestParam(required = false) Integer minViews,
+            @RequestParam(required = false) Integer minApplications,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDirection
+    ) {
+        Page<Job> jobs = jobService.searchJobs(
+                title, locationId, levelId, jobTypeId, industryId, salary, status,
+                isFeatured, minViews, minApplications,
+                page, size,
+                sortBy, sortDirection
+        );
+        return ResponseEntity.ok(jobs);
+    }
+
+    @GetMapping("/jobs/suitable/{id}")
+    public ResponseEntity<Page<Job>> getJobsSuitableForApplicant(
+            @PathVariable Integer id,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "6") int size
     ) {
-        Page<Job> jobs = jobService.searchJobs(title, locationId, levelId, jobTypeId, industryId, salary, status, page, size);
+        Page<Job> jobs = jobService.findJobsByApplicantLevel(id, page, size);
         return ResponseEntity.ok(jobs);
     }
 
@@ -91,7 +111,7 @@ public class ApiJobController {
         job.setSalary(jobDTO.getSalary());
         job.setTitle(jobDTO.getTitle());
         job.setUser(user);
-        job.setStatus(jobDTO.getStatus());
+        job.setStatus(Job.Status.PENDING);
         job.setIsActive(jobDTO.getIsActive());
         job.setModerator(null);
 
@@ -152,6 +172,22 @@ public class ApiJobController {
     public ResponseEntity<Job> activationJob(@RequestBody ActivationDTO activationDTO, @PathVariable int id){
         Job job = this.jobService.getJobById(id);
         job.setIsActive(activationDTO.getIsActive());
+
+        return ResponseEntity.ok(this.jobService.updateJob(job));
+    }
+
+    @PatchMapping("/jobs/{id}/increment-view")
+    public ResponseEntity<Job> incrementViewCountJob(@PathVariable int id){
+        Job job = this.jobService.getJobById(id);
+        job.setViewsCount(job.getViewsCount() + 1);
+
+        return ResponseEntity.ok(this.jobService.updateJob(job));
+    }
+
+    @PatchMapping("/jobs/{id}/increment-view-applications")
+    public ResponseEntity<Job> incrementViewCountApplication(@PathVariable int id){
+        Job job = this.jobService.getJobById(id);
+        job.setApplicationCount(job.getApplicationCount() + 1);
 
         return ResponseEntity.ok(this.jobService.updateJob(job));
     }

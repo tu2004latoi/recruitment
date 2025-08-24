@@ -4,8 +4,11 @@ import com.dtt.dto.ApplicantDTO;
 import com.dtt.dto.EducationDTO;
 import com.dtt.dto.LocationDTO;
 import com.dtt.dto.UserDTO;
+import com.dtt.model.Institution;
+import com.dtt.model.Level;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -15,6 +18,11 @@ import java.util.List;
 
 @Service
 public class CVPdfExportUniqueService999 {
+    @Autowired
+    private InstitutionService institutionService;
+
+    @Autowired
+    private LevelService levelService;
 
     private Font loadArial(String fontFile, float size, int style, BaseColor color) throws Exception {
         String fontPath = new File("src/main/resources/fonts/" + fontFile).getAbsolutePath();
@@ -136,10 +144,14 @@ public class CVPdfExportUniqueService999 {
         rightCell.addElement(new Paragraph("Học vấn", sectionFont));
         for (EducationDTO edu : educations) {
             Paragraph eduTitle = new Paragraph(edu.getYear() + " - " + edu.getTitle(), loadArial("arialbd.ttf", 12, Font.BOLD, BaseColor.BLACK));
-            Paragraph eduSchool = new Paragraph("Trường: " + edu.getInstitutionId(), normalFont);
+            Level level = this.levelService.getLevelById(edu.getLevelId());
+            Institution institution = this.institutionService.getInstitutionById(edu.getInstitutionId());
+            Paragraph eduSchool = new Paragraph("Trường: " + institution.getName(), normalFont);
+            Paragraph eduLevel = new Paragraph("Trình độ: " + level.getName(), normalFont);
             eduTitle.setSpacingBefore(5f);
             rightCell.addElement(eduTitle);
             rightCell.addElement(eduSchool);
+            rightCell.addElement(eduLevel);
         }
 
         mainTable.addCell(rightCell);

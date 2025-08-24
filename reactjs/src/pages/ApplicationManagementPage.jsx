@@ -13,7 +13,8 @@ import {
     FaClock,
     FaTimesCircle,
     FaFileAlt,
-    FaUser
+    FaUser,
+    FaTrash
 } from "react-icons/fa";
 import { MyUserContext } from "../configs/MyContexts";
 
@@ -22,6 +23,7 @@ const ApplicationManagementPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [selectedApplication, setSelectedApplication] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
+    const [deletingId, setDeletingId] = useState(null);
     const navigate = useNavigate();
     const user = useContext(MyUserContext);
 
@@ -38,23 +40,38 @@ const ApplicationManagementPage = () => {
         try {
             const response = await authApis().get(endpoints.myApplications);
             const applications = response.data;
-            console.log("Raw applications:", applications);
             
             // Fetch detailed information for each application using separate APIs
+            const recruiterCache = {};
             const detailedApplications = await Promise.all(
                 applications.map(async (application) => {
                     try {
                         // Fetch job details using jobId
                         const jobResponse = await authApis().get(endpoints.jobDetail(application.jobId));
                         const jobData = jobResponse.data;
+                        // Fetch recruiter using nested user.userId from job payload
+                        let recruiterData = null;
+                        const uid = jobData?.user?.userId;
+                        if (uid) {
+                            try {
+                                if (recruiterCache[uid]) {
+                                    recruiterData = recruiterCache[uid];
+                                } else {
+                                    const recRes = await authApis().get(endpoints.recruiterDetail(uid));
+                                    recruiterData = recRes.data;
+                                    recruiterCache[uid] = recruiterData;
+                                }
+                            } catch (e) {
+                                console.warn('Failed to fetch recruiter detail for userId', uid, e);
+                            }
+                        }
                         
                         // Combine all data (userId is the current user, no need to fetch)
                         const detailedApplication = {
                             ...application,
-                            job: jobData
+                            job: recruiterData ? { ...jobData, recruiter: recruiterData } : jobData
                         };
                         
-                        console.log("Detailed application:", detailedApplication);
                         return detailedApplication;
                     } catch (err) {
                         console.error(`Lỗi khi tải chi tiết đơn ${application.applicationId}:`, err);
@@ -106,11 +123,22 @@ const ApplicationManagementPage = () => {
             // Fetch job details using jobId
             const jobResponse = await authApis().get(endpoints.jobDetail(application.jobId));
             const jobData = jobResponse.data;
+            // Fetch recruiter using nested user.userId from job payload
+            let recruiterData = null;
+            const uid = jobData?.user?.userId;
+            if (uid) {
+                try {
+                    const recRes = await authApis().get(endpoints.recruiterDetail(uid));
+                    recruiterData = recRes.data;
+                } catch (e) {
+                    console.warn('Failed to fetch recruiter detail for userId', uid, e);
+                }
+            }
             
             // Combine all data (userId is the current user, no need to fetch)
             const detailedApplication = {
                 ...application,
-                job: jobData
+                job: recruiterData ? { ...jobData, recruiter: recruiterData } : jobData
             };
             
             setSelectedApplication(detailedApplication);
@@ -118,6 +146,32 @@ const ApplicationManagementPage = () => {
         } catch (err) {
             console.error("Lỗi khi tải chi tiết đơn ứng tuyển:", err);
             alert("Không thể tải chi tiết đơn ứng tuyển!");
+        }
+    };
+
+    const handleDeleteApplication = async (application) => {
+        // Không cho phép xóa nếu đã được chấp nhận
+        if (application?.status === 'ACCEPTED') {
+            alert('Đơn ứng tuyển đã được chấp nhận và không thể xóa.');
+            return;
+        }
+        const confirmed = window.confirm("Bạn có chắc chắn muốn xóa đơn ứng tuyển này?");
+        if (!confirmed) return;
+        try {
+            setDeletingId(application.applicationId);
+            await authApis().delete(endpoints.deleteApplication(application.applicationId));
+            setApplications((prev) => prev.filter(a => a.applicationId !== application.applicationId));
+            // Nếu đang mở modal của đơn bị xóa thì đóng modal
+            if (selectedApplication && selectedApplication.applicationId === application.applicationId) {
+                setShowDetailModal(false);
+                setSelectedApplication(null);
+            }
+            alert("Đã xóa đơn ứng tuyển thành công!");
+        } catch (err) {
+            console.error("Xóa đơn ứng tuyển thất bại:", err);
+            alert("Không thể xóa đơn ứng tuyển. Vui lòng thử lại!");
+        } finally {
+            setDeletingId(null);
         }
     };
 
@@ -256,6 +310,17 @@ const ApplicationManagementPage = () => {
                                         >
                                             <FaEye className="w-4 h-4" />
                                             Xem chi tiết
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteApplication(application)}
+                                            disabled={deletingId === application.applicationId || application.status === 'ACCEPTED'}
+                                            title={application.status === 'ACCEPTED' ? 'Đơn đã được chấp nhận, không thể xóa' : ''}
+                                            className={`flex items-center gap-2 text-sm font-medium transition-colors duration-200 disabled:opacity-50 ${application.status === 'ACCEPTED' 
+                                                ? 'text-gray-400 cursor-not-allowed' 
+                                                : 'text-red-600 hover:text-red-700'}`}
+                                        >
+                                            <FaTrash className="w-4 h-4" />
+                                            {deletingId === application.applicationId ? 'Đang xóa...' : 'Xóa đơn'}
                                         </button>
                                     </div>
                                 </div>

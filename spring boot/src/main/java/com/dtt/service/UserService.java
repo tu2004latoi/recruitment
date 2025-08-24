@@ -61,6 +61,12 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
+    public User changePasswordUser(User user){
+        user.setPassword(this.passwordEncoder.encode(user.getPassword()));
+        return this.userRepository.save(user);
+    }
+
+    @Transactional
     public User addOrUpdateUser(User u){
         if (u.getFile() != null && !u.getFile().isEmpty()) {
             try {
@@ -70,11 +76,6 @@ public class UserService implements UserDetailsService {
                 Logger.getLogger(UserService.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-
-        if (u.getPassword() != null && !u.getPassword().isEmpty()) {
-            u.setPassword(this.passwordEncoder.encode(u.getPassword()));
-        }
-
         return this.userRepository.save(u);
     }
 

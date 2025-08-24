@@ -26,6 +26,7 @@ import {
     FaRegBookmark
 } from "react-icons/fa";
 import { MyUserContext } from "../configs/MyContexts";
+import { useTranslation } from 'react-i18next';
 
 const JobDetailPage = () => {
     const { jobId } = useParams();
@@ -42,10 +43,34 @@ const JobDetailPage = () => {
     });
     const navigate = useNavigate();
     const [currentUser, setCurrentUser] = useState(null);
+    const { t, i18n } = useTranslation();
 
     useEffect(() => {
         fetchJobDetails();
+        incrementViewCountJob();
     }, [jobId]);
+
+    const incrementViewCountJob = async () => {
+        try {
+            await authApis().patch(endpoints.incrementViewCountJob(jobId));
+        } catch (err) {
+            console.error("Failed to increment view count:", err);
+        }
+    };
+
+    // Navigate to chat with recruiter (partnerId from job.user.userId or job.recruiter.userId)
+    const handleChat = () => {
+        if (!currentUser) {
+            navigate("/login");
+            return;
+        }
+        const partnerId = job?.user?.userId || job?.recruiter?.userId;
+        if (!partnerId) {
+            alert(t('jobDetail.alerts.userNotFound'));
+            return;
+        }
+        navigate(`/chat?partnerId=${partnerId}`);
+    };
 
     useEffect(() => {
         if (currentUser) {
@@ -63,7 +88,7 @@ const JobDetailPage = () => {
             
             // Check if job is active and approved (for public access)
             if (!job.isActive || job.status !== "APPROVED") {
-                alert("Công việc này không khả dụng hoặc chưa được duyệt!");
+                alert(t('jobDetail.alerts.notAvailable'));
                 navigate("/jobs");
                 return;
             }
@@ -75,7 +100,7 @@ const JobDetailPage = () => {
                     job.location = LocationService.formatLocation(locationRes);
                 } catch (locationErr) {
                     console.error("Failed to fetch location details:", locationErr);
-                    job.location = "Không xác định";
+                    job.location = t('jobDetail.labels.unknown');
                 }
             }
             
@@ -91,7 +116,7 @@ const JobDetailPage = () => {
             }
         } catch (err) {
             console.error("Failed to fetch job details:", err);
-            alert("Không thể tải thông tin công việc!");
+            alert(t('jobDetail.alerts.loadFailed'));
             navigate("/jobs");
         } finally {
             setIsLoading(false);
@@ -110,7 +135,7 @@ const JobDetailPage = () => {
             const hasAppliedToThisJob = userApplications.some(app => app.jobId === parseInt(jobId));
             setHasApplied(hasAppliedToThisJob);
         } catch (err) {
-            console.error("Không thể kiểm tra trạng thái ứng tuyển:", err);
+            console.error("Failed to check application status:", err);
             setHasApplied(false);
         }
     };
@@ -127,19 +152,21 @@ const JobDetailPage = () => {
             const isJobFavorited = favoriteJobs.some(fav => fav.jobId === parseInt(jobId));
             setIsBookmarked(isJobFavorited);
         } catch (err) {
-            console.error("Không thể kiểm tra trạng thái yêu thích:", err);
+            console.error("Failed to check favorite status:", err);
             setIsBookmarked(false);
         }
     };
 
     const formatDate = (dateString) => {
         if (!dateString) return "N/A";
-        return new Date(dateString).toLocaleDateString('vi-VN');
+        const locale = i18n.language === 'vi' ? 'vi-VN' : 'en-US';
+        return new Date(dateString).toLocaleDateString(locale);
     };
 
     const formatSalary = (salary) => {
-        if (!salary) return "Thỏa thuận";
-        return new Intl.NumberFormat('vi-VN').format(salary) + " VNĐ";
+        const locale = i18n.language === 'vi' ? 'vi-VN' : 'en-US';
+        if (!salary) return t('jobDetail.salary.negotiable');
+        return new Intl.NumberFormat(locale).format(salary) + " " + t('jobDetail.currency.vnd');
     };
 
     const getTimeAgo = (dateString) => {
@@ -149,10 +176,10 @@ const JobDetailPage = () => {
         const diffTime = Math.abs(now - jobDate);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         
-        if (diffDays === 1) return "Hôm nay";
-        if (diffDays <= 7) return `${diffDays} ngày trước`;
-        if (diffDays <= 30) return `${Math.floor(diffDays / 7)} tuần trước`;
-        return `${Math.floor(diffDays / 30)} tháng trước`;
+        if (diffDays === 1) return t('jobDetail.time.today');
+        if (diffDays <= 7) return t('jobDetail.time.daysAgo', { count: diffDays });
+        if (diffDays <= 30) return t('jobDetail.time.weeksAgo', { count: Math.floor(diffDays / 7) });
+        return t('jobDetail.time.monthsAgo', { count: Math.floor(diffDays / 30) });
     };
 
     const handleApply = () => {
@@ -162,12 +189,12 @@ const JobDetailPage = () => {
         }
         
         if (currentUser.role !== 'APPLICANT') {
-            alert("Chỉ ứng viên mới có thể ứng tuyển công việc!");
+            alert(t('jobDetail.alerts.onlyApplicantCanApply'));
             return;
         }
         
         if (hasApplied) {
-            alert("Bạn đã ứng tuyển công việc này rồi!");
+            alert(t('jobDetail.alerts.alreadyApplied'));
             return;
         }
         
@@ -181,16 +208,16 @@ const JobDetailPage = () => {
         try {
             const formData = new FormData();
             
-            // Đảm bảo currentUser và userId tồn tại
+            // Ensure currentUser and userId exist
             if (!currentUser || !currentUser.userId) {
-                alert("Không tìm thấy thông tin người dùng!");
+                alert(t('jobDetail.alerts.userNotFound'));
                 return;
             }
             
             formData.append("userId", currentUser.userId.toString());
             formData.append("jobId", jobId.toString());
             
-            // Format datetime cho LocalDateTime (YYYY-MM-DDTHH:mm:ss format mà Spring Boot có thể parse)
+            // Format datetime for LocalDateTime (YYYY-MM-DDTHH:mm:ss) that Spring Boot can parse
             const now = new Date();
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -209,30 +236,22 @@ const JobDetailPage = () => {
                 formData.append("file", applicationData.resume);
             }
 
-            // Debug: Log dữ liệu được gửi
-            console.log("Sending application data:");
-            console.log("userId:", currentUser.userId);
-            console.log("jobId:", jobId);
-            console.log("appliedAt:", localDateTime);
-            console.log("coverLetter:", applicationData.coverLetter);
-            console.log("status:", "PENDING");
-            console.log("file:", applicationData.resume);
-
             const response = await authApis().post(endpoints.createApplication, formData, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
 
-            console.log("Đơn ứng tuyển đã được gửi thành công:", response.data);
-            alert("Đơn ứng tuyển đã được gửi thành công!");
+            console.log("Application submitted successfully:", response.data);
+            alert(t('jobDetail.alerts.applicationSent'));
+            await authApis().patch(endpoints.incrementViewCountApplication(jobId));
             setShowApplicationForm(false);
             setApplicationData({ coverLetter: "", resume: null });
             setHasApplied(true);
         } catch (err) {
-            console.error("Lỗi khi gửi đơn ứng tuyển:", err);
+            console.error("Error submitting application:", err);
             if (err.response?.status === 409) {
-                alert("Bạn đã ứng tuyển công việc này rồi!");
+                alert(t('jobDetail.alerts.alreadyApplied'));
             } else {
-                alert("Gửi đơn ứng tuyển thất bại! Vui lòng thử lại.");
+                alert(t('jobDetail.alerts.applicationFailed'));
             }
         } finally {
             setIsApplying(false);
@@ -241,7 +260,7 @@ const JobDetailPage = () => {
 
     const handleBookmark = async () => {
         if (!currentUser || currentUser.role !== 'APPLICANT') {
-            alert("Chỉ ứng viên mới có thể lưu công việc!");
+            alert(t('jobDetail.alerts.onlyApplicantCanBookmark'));
             return;
         }
 
@@ -249,7 +268,7 @@ const JobDetailPage = () => {
         
         try {
             if (isBookmarked) {
-                // Xóa khỏi favorites
+                // Remove from favorites
                 const response = await authApis().get(endpoints.myFavorites);
                 const favoriteJobs = response.data;
                 const favoriteJob = favoriteJobs.find(fav => fav.jobId === parseInt(jobId));
@@ -257,10 +276,10 @@ const JobDetailPage = () => {
                 if (favoriteJob) {
                     await authApis().delete(endpoints.deleteFavorite(favoriteJob.favoriteJobId));
                     setIsBookmarked(false);
-                    alert("Đã bỏ lưu công việc");
+                    alert(t('jobDetail.alerts.bookmarkRemoved'));
                 }
             } else {
-                // Thêm vào favorites
+                // Add to favorites
                 const now = new Date();
                 const year = now.getFullYear();
                 const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -278,11 +297,11 @@ const JobDetailPage = () => {
 
                 await authApis().post(endpoints.addFavorite, favoriteData);
                 setIsBookmarked(true);
-                alert("Đã lưu công việc");
+                alert(t('jobDetail.alerts.bookmarkAdded'));
             }
         } catch (err) {
-            console.error("Lỗi khi thao tác với favorites:", err);
-            alert("Có lỗi xảy ra khi thao tác với favorites!");
+            console.error("Error interacting with favorites:", err);
+            alert(t('jobDetail.alerts.bookmarkFailed'));
         } finally {
             setIsCheckingFavorite(false);
         }
@@ -292,12 +311,12 @@ const JobDetailPage = () => {
         if (navigator.share) {
             navigator.share({
                 title: job?.title,
-                text: `Cơ hội việc làm: ${job?.title}`,
+                text: t('jobDetail.shareText', { title: job?.title }),
                 url: window.location.href
             });
         } else {
             navigator.clipboard.writeText(window.location.href);
-            alert("Đã sao chép link vào clipboard!");
+            alert(t('jobDetail.alerts.linkCopied'));
         }
     };
 
@@ -317,12 +336,12 @@ const JobDetailPage = () => {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
                 <div className="max-w-4xl mx-auto text-center">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-4">Không tìm thấy công việc</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('jobDetail.headers.notFound')}</h1>
                     <button
                         onClick={() => navigate("/jobs")}
                         className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
                     >
-                        Quay lại danh sách
+                        {t('jobDetail.buttons.backToList')}
                     </button>
                 </div>
             </div>
@@ -348,28 +367,35 @@ const JobDetailPage = () => {
                             <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-2 border-white animate-pulse-slow"></div>
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold gradient-text">Chi tiết công việc</h1>
-                            <p className="text-gray-600 mt-1">Thông tin chi tiết về cơ hội nghề nghiệp</p>
+                            <h1 className="text-3xl font-bold gradient-text">{t('jobDetail.headers.jobDetail')}</h1>
+                            <p className="text-gray-600 mt-1">{t('jobDetail.headers.jobInfo')}</p>
                         </div>
                     </div>
                     
                     <div className="flex gap-2">
-                                                 <button
-                             onClick={handleBookmark}
-                             disabled={isCheckingFavorite}
-                             className="p-3 text-gray-600 hover:text-yellow-500 hover:bg-white rounded-lg transition-all duration-200 disabled:opacity-50"
-                             title={currentUser?.role === 'APPLICANT' ? "Lưu công việc" : "Chỉ ứng viên mới có thể lưu công việc"}
-                         >
-                             {isCheckingFavorite ? (
-                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-500"></div>
-                             ) : (
-                                 isBookmarked ? <FaBookmark className="text-xl text-yellow-500" /> : <FaRegBookmark className="text-xl" />
-                             )}
-                         </button>
+                        <button
+                            onClick={handleChat}
+                            className="p-3 text-gray-600 hover:text-blue-600 hover:bg-white rounded-lg transition-all duration-200"
+                            title={t('jobDetail.buttons.chatWithRecruiter') || 'Nhắn tin với nhà tuyển dụng'}
+                        >
+                            <FaEnvelope className="text-xl" />
+                        </button>
+                        <button
+                            onClick={handleBookmark}
+                            disabled={isCheckingFavorite}
+                            className="p-3 text-gray-600 hover:text-yellow-500 hover:bg-white rounded-lg transition-all duration-200 disabled:opacity-50"
+                            title={currentUser?.role === 'APPLICANT' ? t('jobDetail.buttons.bookmark') : t('jobDetail.buttons.onlyApplicantCanBookmark')}
+                        >
+                            {isCheckingFavorite ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-500"></div>
+                            ) : (
+                                isBookmarked ? <FaBookmark className="text-xl text-yellow-500" /> : <FaRegBookmark className="text-xl" />
+                            )}
+                        </button>
                         <button
                             onClick={handleShare}
                             className="p-3 text-gray-600 hover:text-blue-500 hover:bg-white rounded-lg transition-all duration-200"
-                            title="Chia sẻ"
+                            title={t('jobDetail.buttons.share')}
                         >
                             <FaShare className="text-xl" />
                         </button>
@@ -402,7 +428,7 @@ const JobDetailPage = () => {
                                     {job.isFeatured && (
                                         <div className="flex items-center gap-2 text-yellow-500 mb-4">
                                             <FaStar />
-                                            <span className="font-medium">Công việc nổi bật</span>
+                                            <span className="font-medium">{t('jobDetail.labels.featured')}</span>
                                         </div>
                                     )}
                                 </div>
@@ -412,21 +438,21 @@ const JobDetailPage = () => {
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                                 <div className="text-center p-3 bg-blue-50 rounded-lg">
                                     <div className="text-2xl font-bold text-blue-600">{job.quantity}</div>
-                                    <div className="text-sm text-gray-600">Vị trí</div>
+                                    <div className="text-sm text-gray-600">{t('jobDetail.metrics.quantity')}</div>
                                 </div>
                                 <div className="text-center p-3 bg-green-50 rounded-lg">
                                     <div className="text-2xl font-bold text-green-600">{job.viewsCount || 0}</div>
-                                    <div className="text-sm text-gray-600">Lượt xem</div>
+                                    <div className="text-sm text-gray-600">{t('jobDetail.metrics.views')}</div>
                                 </div>
                                 <div className="text-center p-3 bg-purple-50 rounded-lg">
                                     <div className="text-2xl font-bold text-purple-600">{job.applicationCount || 0}</div>
-                                    <div className="text-sm text-gray-600">Ứng tuyển</div>
+                                    <div className="text-sm text-gray-600">{t('jobDetail.metrics.applications')}</div>
                                 </div>
                                 <div className="text-center p-3 bg-orange-50 rounded-lg">
                                     <div className="text-2xl font-bold text-orange-600">
                                         {job.createdAt ? getTimeAgo(job.createdAt) : "N/A"}
                                     </div>
-                                    <div className="text-sm text-gray-600">Đăng tin</div>
+                                    <div className="text-sm text-gray-600">{t('jobDetail.metrics.posted')}</div>
                                 </div>
                             </div>
 
@@ -439,7 +465,7 @@ const JobDetailPage = () => {
                                             ? `${job.location.province}, ${job.location.district}`
                                             : job.location}
                                     </span>
-                                    {/* Nút xem trên Google Map */}
+                                    {/* View on Google Map button */}
                                     {job.location && job.location.getGoogleMapsUrl && (
                                         <a
                                             href={job.location.getGoogleMapsUrl()}
@@ -447,10 +473,10 @@ const JobDetailPage = () => {
                                             rel="noopener noreferrer"
                                             className="ml-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium hover:bg-green-200 transition"
                                         >
-                                            Xem trên Google Map
+                                            {t('jobDetail.buttons.viewOnMap')}
                                         </a>
                                     )}
-                                    {/* Nếu backend trả về googleMapsUrl thay vì getGoogleMapsUrl là function */}
+                                    {/* If backend returns googleMapsUrl instead of getGoogleMapsUrl function */}
                                     {job.location && job.location.googleMapsUrl && (
                                         <a
                                             href={job.location.googleMapsUrl}
@@ -458,7 +484,7 @@ const JobDetailPage = () => {
                                             rel="noopener noreferrer"
                                             className="ml-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium hover:bg-green-200 transition"
                                         >
-                                            Xem trên Google Map
+                                            {t('jobDetail.buttons.viewOnMap')}
                                         </a>
                                     )}
                                 </div>
@@ -472,47 +498,56 @@ const JobDetailPage = () => {
                                 
                                 <div className="flex items-center gap-3 text-gray-600">
                                     <FaCalendarAlt className="text-red-500" />
-                                    <span>Hết hạn: {formatDate(job.expiredAt)}</span>
+                                    <span>{t('jobDetail.labels.expiresAt', { date: formatDate(job.expiredAt) })}</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Job Description */}
                         <div className="bg-white rounded-xl p-6 shadow-sm animate-fade-in-up">
-                            <h3 className="text-xl font-semibold text-gray-900 mb-4">Mô tả công việc</h3>
+                            <h3 className="text-xl font-semibold text-gray-900 mb-4">{t('jobDetail.sections.jobDescription')}</h3>
                             <div className="prose max-w-none">
                                 {job.description ? (
                                     <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
                                         {job.description}
                                     </div>
                                 ) : (
-                                    <p className="text-gray-500 italic">Chưa có mô tả chi tiết</p>
+                                    <p className="text-gray-500 italic">{t('jobDetail.labels.noDescription')}</p>
                                 )}
                             </div>
                         </div>
 
                         {/* Job Requirements */}
                         <div className="bg-white rounded-xl p-6 shadow-sm animate-fade-in-up">
-                            <h3 className="text-xl font-semibold text-gray-900 mb-4">Yêu cầu công việc</h3>
+                            <h3 className="text-xl font-semibold text-gray-900 mb-4">{t('jobDetail.sections.jobRequirements')}</h3>
                             <div className="space-y-4">
                                 {job.level && (
                                     <div className="flex items-center gap-3">
                                         <FaUser className="text-blue-500" />
-                                        <span className="text-gray-700">Trình độ: <span className="font-medium">{typeof job.level === 'object' ? job.level.name : job.level}</span></span>
+                                        <span className="text-gray-700">
+                                            {t('jobDetail.labels.level')}:
+                                            <span className="font-medium">{typeof job.level === 'object' ? job.level.name : job.level}</span>
+                                        </span>
                                     </div>
                                 )}
                                 
                                 {job.jobType && (
                                     <div className="flex items-center gap-3">
                                         <FaBriefcase className="text-purple-500" />
-                                        <span className="text-gray-700">Loại công việc: <span className="font-medium">{typeof job.jobType === 'object' ? job.jobType.name : job.jobType}</span></span>
+                                        <span className="text-gray-700">
+                                            {t('jobDetail.labels.jobType')}:
+                                            <span className="font-medium">{typeof job.jobType === 'object' ? job.jobType.name : job.jobType}</span>
+                                        </span>
                                     </div>
                                 )}
                                 
                                 {job.industry && (
                                     <div className="flex items-center gap-3">
                                         <FaBuilding className="text-orange-500" />
-                                        <span className="text-gray-700">Ngành nghề: <span className="font-medium">{typeof job.industry === 'object' ? job.industry.name : job.industry}</span></span>
+                                        <span className="text-gray-700">
+                                            {t('jobDetail.labels.industry')}:
+                                            <span className="font-medium">{typeof job.industry === 'object' ? job.industry.name : job.industry}</span>
+                                        </span>
                                     </div>
                                 )}
                             </div>
@@ -525,12 +560,12 @@ const JobDetailPage = () => {
                         <div className="bg-white rounded-xl p-6 shadow-sm animate-fade-in-up">
                             <div className="text-center mb-4">
                                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                    {hasApplied ? "Đã ứng tuyển" : "Ứng tuyển ngay"}
+                                    {hasApplied ? t('jobDetail.buttons.alreadyApplied') : t('jobDetail.buttons.applyNow')}
                                 </h3>
                                 <p className="text-sm text-gray-600">
                                     {hasApplied 
-                                        ? "Bạn đã nộp đơn ứng tuyển cho vị trí này" 
-                                        : "Nộp đơn ứng tuyển cho vị trí này"
+                                        ? t('jobDetail.labels.alreadyApplied')
+                                        : t('jobDetail.labels.applyNow')
                                     }
                                 </p>
                             </div>
@@ -539,23 +574,23 @@ const JobDetailPage = () => {
                                 <div className="w-full bg-green-100 text-green-700 py-3 px-6 rounded-lg font-semibold text-center border border-green-200">
                                     <div className="flex items-center justify-center gap-2">
                                         <FaCheckCircle className="text-green-600" />
-                                        Đã ứng tuyển
+                                        {t('jobDetail.buttons.alreadyApplied')}
                                     </div>
                                 </div>
                             ) : (
                                 <button
                                     onClick={handleApply}
                                     className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transition-all duration-200 hover:scale-105 active:scale-95"
-                                                                 >
-                                     {currentUser ? "Ứng tuyển ngay" : "Đăng nhập để ứng tuyển"}
-                                 </button>
+                                >
+                                    {currentUser ? t('jobDetail.buttons.applyNow') : t('jobDetail.buttons.loginToApply')}
+                                </button>
                             )}
                         </div>
 
                         {/* Recruiter Info */}
                         {job.recruiter && (
                             <div className="bg-white rounded-xl p-6 shadow-sm animate-fade-in-up">
-                                <h3 className="text-lg font-semibold text-gray-900 mb-4">Thông tin nhà tuyển dụng</h3>
+                                <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('jobDetail.sections.recruiterInfo')}</h3>
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-3">
                                         <FaUser className="text-blue-500" />
@@ -577,27 +612,25 @@ const JobDetailPage = () => {
                                             <span className="text-gray-700">{job.recruiter.phone}</span>
                                         </div>
                                     )}
+                                    <div className="pt-2">
+                                        <button
+                                            onClick={handleChat}
+                                            className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition"
+                                        >
+                                            {t('jobDetail.buttons.chatWithRecruiter') || 'Nhắn tin với nhà tuyển dụng'}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         )}
 
                         {/* Job Tags */}
                         <div className="bg-white rounded-xl p-6 shadow-sm animate-fade-in-up">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Thông tin khác</h3>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('jobDetail.sections.otherInfo')}</h3>
                             <div className="space-y-3">
                                 <div className="flex items-center gap-3">
                                     <FaClock className="text-blue-500" />
-                                    <span className="text-gray-700">Đăng tin: {getTimeAgo(job.createdAt)}</span>
-                                </div>
-                                
-                                <div className="flex items-center gap-3">
-                                    <FaCalendarAlt className="text-red-500" />
-                                    <span className="text-gray-700">Hết hạn: {formatDate(job.expiredAt)}</span>
-                                </div>
-                                
-                                <div className="flex items-center gap-3">
-                                    <FaUsers className="text-green-500" />
-                                    <span className="text-gray-700">Số lượng: {job.quantity} vị trí</span>
+                                    <span className="text-gray-700">{t('jobDetail.tags.postedPrefix')} {getTimeAgo(job.createdAt)}</span>
                                 </div>
                             </div>
                         </div>
@@ -609,7 +642,7 @@ const JobDetailPage = () => {
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                         <div className="bg-white rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-xl font-semibold text-gray-900">Ứng tuyển công việc</h3>
+                                <h3 className="text-xl font-semibold text-gray-900">{t('jobDetail.labels.applyJob')}</h3>
                                 <button
                                     onClick={() => setShowApplicationForm(false)}
                                     className="text-gray-400 hover:text-gray-600"
@@ -621,21 +654,21 @@ const JobDetailPage = () => {
                             <form onSubmit={handleApplicationSubmit} className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Thư xin việc
+                                        {t('jobDetail.labels.coverLetter')}
                                     </label>
                                     <textarea
                                         value={applicationData.coverLetter}
                                         onChange={(e) => setApplicationData({...applicationData, coverLetter: e.target.value})}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         rows="6"
-                                        placeholder="Viết thư xin việc của bạn..."
+                                        placeholder={t('jobDetail.placeholders.coverLetter')}
                                         required
                                     />
                                 </div>
                                 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        CV/Resume
+                                        {t('jobDetail.labels.resume')}
                                     </label>
                                     <input
                                         type="file"
@@ -644,7 +677,7 @@ const JobDetailPage = () => {
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         required
                                     />
-                                    <p className="text-xs text-gray-500 mt-1">Chấp nhận file PDF, DOC, DOCX</p>
+                                    <p className="text-xs text-gray-500 mt-1">{t('jobDetail.labels.resumeAccepts')}</p>
                                 </div>
                                 
                                 <div className="flex gap-3 pt-4">
@@ -653,14 +686,14 @@ const JobDetailPage = () => {
                                         disabled={isApplying}
                                         className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50"
                                     >
-                                        {isApplying ? "Đang gửi..." : "Gửi đơn ứng tuyển"}
+                                        {isApplying ? t('jobDetail.buttons.submitting') : t('jobDetail.buttons.submit')}
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setShowApplicationForm(false)}
                                         className="flex-1 bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition-all duration-200"
                                     >
-                                        Hủy
+                                        {t('jobDetail.buttons.cancel')}
                                     </button>
                                 </div>
                             </form>

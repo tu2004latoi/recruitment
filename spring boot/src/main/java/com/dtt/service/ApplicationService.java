@@ -9,6 +9,7 @@ import jakarta.transaction.Transactional;
 import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -46,21 +47,45 @@ public class ApplicationService {
     public List<Application> getApplicationByUserRecruiter(User user) { return this.applicationRepository.findByJob_User(user); }
 
     @Transactional
-    public Application addApplication(Application application){
+    public Application addApplication(Application application) {
         if (application.getApplicationId() != null)
-            throw new IllegalArgumentException("Application must have an ID");
+            throw new IllegalArgumentException("Application must not have an ID");
 
-        if (application.getFile() != null && !application.getFile().isEmpty()) {
+        MultipartFile file = application.getFile();
+        if (file != null && !file.isEmpty()) {
+            if (!"application/pdf".equals(file.getContentType())) {
+                throw new IllegalArgumentException("Chỉ cho phép upload file PDF");
+            }
             try {
-                Map res = cloudinary.uploader().upload(application.getFile().getBytes(), ObjectUtils.asMap("resource_type", "auto"));
+                String originalName = file.getOriginalFilename();
+                String baseName = "uploaded_cv";
+                if (originalName != null && originalName.toLowerCase().endsWith(".pdf")) {
+                    baseName = originalName.substring(0, originalName.length() - 4);
+                    baseName = baseName.replaceAll("[^a-zA-Z0-9_-]", "_");
+                }
+
+                String publicId = baseName + ".pdf";
+
+                byte[] bytes = file.getBytes();
+
+                Map options = ObjectUtils.asMap(
+                        "resource_type", "raw",
+                        "public_id", publicId
+                );
+
+                Map res = cloudinary.uploader().upload(bytes, options);
+
                 application.setCv(res.get("secure_url").toString());
+
             } catch (IOException ex) {
                 Logger.getLogger(ApplicationService.class.getName()).log(Level.SEVERE, null, ex);
+                throw new RuntimeException("Upload file lên Cloudinary thất bại", ex);
             }
         }
 
         return this.applicationRepository.save(application);
     }
+
 
     @Transactional
     public Application updateApplication(Application application){

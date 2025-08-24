@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import Apis, { authApis, endpoints } from "../configs/Apis";
 import { FaUserPlus, FaTrash, FaCamera } from "react-icons/fa";
 import { getMessaging, onMessage } from "firebase/messaging";
@@ -7,6 +8,7 @@ import { onMessageListener } from '../firebase';
 import { messaging } from '../firebase';
 
 const AddUserPage = () => {
+  const { t } = useTranslation();
   const [user, setUser] = useState({
     username: "",
     password: "",
@@ -163,7 +165,7 @@ const AddUserPage = () => {
           applicantLocationId = locationResponse.data.locationId || locationResponse.data.id;
           console.log("Created applicant location:", applicantLocationId);
         } catch (error) {
-          alert("Tạo địa chỉ cho ứng viên thất bại: " + error.message);
+          alert(t('addUser.alerts.createApplicantLocationFailed', { message: error.message }));
           return;
         }
       }
@@ -181,7 +183,7 @@ const AddUserPage = () => {
           recruiterLocationId = locationResponse.data.locationId || locationResponse.data.id;
           console.log("Created recruiter location:", recruiterLocationId);
         } catch (error) {
-          alert("Tạo địa chỉ cho nhà tuyển dụng thất bại: " + error.message);
+          alert(t('addUser.alerts.createRecruiterLocationFailed', { message: error.message }));
           return;
         }
       }
@@ -273,74 +275,74 @@ const AddUserPage = () => {
         console.log(fcmToken);
         if (fcmToken) {
           await authApis().post(endpoints.sendNotification, {
-            title: "Thông báo",
-            body: "Thêm người dùng thành công!",
+            title: t('addUser.notification.title'),
+            body: t('addUser.notification.bodySuccess'),
             fcmToken: fcmToken
           });
-          alert("Thêm người dùng thành công và đã gửi thông báo!");
+          alert(t('addUser.alerts.successAndNotify'));
         } else {
-          alert("Thêm người dùng thành công! (Không tìm thấy FCM token để gửi thông báo)");
+          alert(t('addUser.alerts.successNoToken'));
         }
       } catch (err) {
-        alert("Thêm thành công nhưng gửi thông báo thất bại!");
+        alert(t('addUser.alerts.notifyFailed'));
       }
     } catch (err) {
       console.error(err);
-      alert("Thêm thất bại.");
+      alert(t('addUser.alerts.failed'));
     }
   };
 
   return (
     <div className="max-w-3xl mx-auto p-8 bg-gradient-to-br from-blue-100 via-white to-blue-50 rounded-3xl shadow-2xl border border-blue-200 animate-fade-in">
       <h1 className="flex items-center justify-center gap-3 text-4xl font-extrabold mb-10 text-blue-800 text-center tracking-wide drop-shadow-lg">
-        <FaUserPlus className="text-blue-500" /> Thêm Người Dùng
+        <FaUserPlus className="text-blue-500" /> {t('addUser.headers.title')}
       </h1>
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Username */}
           <div>
-            <label className="block mb-1 font-semibold text-gray-600 text-sm">Username</label>
-            <input className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" placeholder="Username" name="username" onChange={handleChange} required />
+            <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.username')}</label>
+            <input className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" placeholder={t('addUser.placeholders.username')} name="username" onChange={handleChange} required />
           </div>
           {/* Password */}
           <div>
-            <label className="block mb-1 font-semibold text-gray-600 text-sm">Password</label>
-            <input className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" placeholder="Password" type="password" name="password" onChange={handleChange} required />
+            <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.password')}</label>
+            <input className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" placeholder={t('addUser.placeholders.password')} type="password" name="password" onChange={handleChange} required />
           </div>
           {/* Email */}
           <div>
-            <label className="block mb-1 font-semibold text-gray-600 text-sm">Email</label>
-            <input className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" placeholder="Email" name="email" onChange={handleChange} />
+            <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.email')}</label>
+            <input className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" placeholder={t('addUser.placeholders.email')} name="email" onChange={handleChange} />
           </div>
           {/* First Name */}
           <div>
-            <label className="block mb-1 font-semibold text-gray-600 text-sm">First Name</label>
-            <input className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" placeholder="First Name" name="firstName" onChange={handleChange} />
+            <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.firstName')}</label>
+            <input className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" placeholder={t('addUser.placeholders.firstName')} name="firstName" onChange={handleChange} />
           </div>
           {/* Last Name */}
           <div>
-            <label className="block mb-1 font-semibold text-gray-600 text-sm">Last Name</label>
-            <input className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" placeholder="Last Name" name="lastName" onChange={handleChange} />
+            <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.lastName')}</label>
+            <input className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" placeholder={t('addUser.placeholders.lastName')} name="lastName" onChange={handleChange} />
           </div>
           {/* Phone */}
           <div>
-            <label className="block mb-1 font-semibold text-gray-600 text-sm">Phone</label>
-            <input className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" placeholder="Phone" name="phone" onChange={handleChange} />
+            <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.phone')}</label>
+            <input className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" placeholder={t('addUser.placeholders.phone')} name="phone" onChange={handleChange} />
           </div>
           {/* Role */}
           <div>
-            <label className="block mb-1 font-semibold text-gray-600 text-sm">Vai trò</label>
+            <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.role')}</label>
             <select className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" name="role" onChange={handleChange} required>
-              <option value="">-- Chọn Vai Trò --</option>
-              <option value="ADMIN">ADMIN</option>
-              <option value="MODERATOR">MODERATOR</option>
-              <option value="RECRUITER">RECRUITER</option>
-              <option value="APPLICANT">APPLICANT</option>
+              <option value="">{t('addUser.role.placeholder')}</option>
+              <option value="ADMIN">{t('addUser.role.admin')}</option>
+              <option value="MODERATOR">{t('addUser.role.moderator')}</option>
+              <option value="RECRUITER">{t('addUser.role.recruiter')}</option>
+              <option value="APPLICANT">{t('addUser.role.applicant')}</option>
             </select>
           </div>
           {/* Provider */}
           <div>
-            <label className="block mb-1 font-semibold text-gray-600 text-sm">Provider</label>
+            <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.provider')}</label>
             <select
               className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white"
               name="provider"
@@ -348,17 +350,17 @@ const AddUserPage = () => {
               onChange={handleChange}
               required
             >
-              <option value="LOCAL">LOCAL</option>
-              <option value="GOOGLE">GOOGLE</option>
+              <option value="LOCAL">{t('addUser.provider.local')}</option>
+              <option value="GOOGLE">{t('addUser.provider.google')}</option>
             </select>
           </div>
           {/* Provider ID */}
           {user.provider === "GOOGLE" && (
             <div>
-              <label className="block mb-1 font-semibold text-gray-600 text-sm">Provider ID</label>
+              <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.providerId')}</label>
               <input
                 className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white"
-                placeholder="Provider ID"
+                placeholder={t('addUser.placeholders.providerId')}
                 name="providerId"
                 onChange={handleChange}
                 value={user.providerId}
@@ -368,7 +370,7 @@ const AddUserPage = () => {
           )}
           {/* Avatar/File */}
           <div className="flex flex-col items-center justify-center gap-2">
-            <label className="block mb-1 font-semibold text-gray-600 text-sm">Avatar/File</label>
+            <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.avatar')}</label>
             <div className="relative group">
               <input
                 type="file"
@@ -386,7 +388,7 @@ const AddUserPage = () => {
                 ) : (
                   <FaCamera className="text-3xl text-blue-300" />
                 )}
-                <div className="absolute bottom-0 left-0 w-full bg-blue-500 bg-opacity-70 text-white text-xs text-center py-1 opacity-0 group-hover:opacity-100 transition-all duration-200">Chọn ảnh</div>
+                <div className="absolute bottom-0 left-0 w-full bg-blue-500 bg-opacity-70 text-white text-xs text-center py-1 opacity-0 group-hover:opacity-100 transition-all duration-200">{t('addUser.labels.chooseImage')}</div>
               </div>
             </div>
           </div>
@@ -394,90 +396,90 @@ const AddUserPage = () => {
         {/* Applicant section */}
         {user.role === "APPLICANT" && (
           <div className="border-t pt-8 mt-10">
-            <h2 className="text-2xl font-bold text-blue-700 mb-6 flex items-center gap-2">Thông Tin Ứng Viên</h2>
+            <h2 className="text-2xl font-bold text-blue-700 mb-6 flex items-center gap-2">{t('addUser.sections.applicant')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                <label className="block mb-1 font-semibold text-gray-600 text-sm">Ngày sinh</label>
+                <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.dob')}</label>
                 <input type="date" name="dob" onChange={handleApplicantChange} className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" />
               </div>
               <div>
-                <label className="block mb-1 font-semibold text-gray-600 text-sm">Giới tính</label>
+                <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.gender')}</label>
                 <select name="gender" onChange={handleApplicantChange} className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white">
-                  <option value="MALE">Nam</option>
-                  <option value="FEMALE">Nữ</option>
+                  <option value="MALE">{t('addUser.labels.male')}</option>
+                  <option value="FEMALE">{t('addUser.labels.female')}</option>
                 </select>
               </div>
               <div>
-                <label className="block mb-1 font-semibold text-gray-600 text-sm">Số năm kinh nghiệm</label>
-                <input name="experienceYears" type="number" placeholder="Số năm kinh nghiệm" onChange={handleApplicantChange} className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" />
+                <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.expYears')}</label>
+                <input name="experienceYears" type="number" placeholder={t('addUser.placeholders.expYears')} onChange={handleApplicantChange} className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" />
               </div>
               <div>
-                <label className="block mb-1 font-semibold text-gray-600 text-sm">Vị trí mong muốn</label>
-                <input name="jobTitle" placeholder="Vị trí mong muốn" onChange={handleApplicantChange} className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" />
+                <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.desiredTitle')}</label>
+                <input name="jobTitle" placeholder={t('addUser.placeholders.desiredTitle')} onChange={handleApplicantChange} className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" />
               </div>
               <div className="md:col-span-2">
-                <label className="block mb-1 font-semibold text-gray-600 text-sm">Kỹ năng</label>
-                <textarea name="skills" placeholder="Kỹ năng" onChange={handleApplicantChange} className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" />
+                <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.skills')}</label>
+                <textarea name="skills" placeholder={t('addUser.placeholders.skills')} onChange={handleApplicantChange} className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" />
               </div>
               <div className="md:col-span-2">
-                <label className="block mb-1 font-semibold text-gray-600 text-sm">Giới thiệu bản thân</label>
-                <textarea name="bio" placeholder="Giới thiệu bản thân" onChange={handleApplicantChange} className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" />
+                <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.bio')}</label>
+                <textarea name="bio" placeholder={t('addUser.placeholders.bio')} onChange={handleApplicantChange} className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white" />
               </div>
             </div>
 
             {/* Location fields cho applicant */}
             <div className="mt-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
-              <h4 className="font-medium text-gray-900 mb-3">Thông tin địa chỉ</h4>
+              <h4 className="font-medium text-gray-900 mb-3">{t('addUser.sections.location')}</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tỉnh/Thành phố</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('addUser.labels.province')}</label>
                   <input
                     type="text"
                     value={applicantLocation.province}
                     onChange={(e) => handleApplicantLocationChange('province', e.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Ví dụ: Hà Nội"
+                    placeholder={t('addUser.placeholders.province')}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Quận/Huyện</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('addUser.labels.district')}</label>
                   <input
                     type="text"
                     value={applicantLocation.district}
                     onChange={(e) => handleApplicantLocationChange('district', e.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Ví dụ: Cầu Giấy"
+                    placeholder={t('addUser.placeholders.district')}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Địa chỉ chi tiết</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('addUser.labels.address')}</label>
                   <input
                     type="text"
                     value={applicantLocation.address}
                     onChange={(e) => handleApplicantLocationChange('address', e.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Ví dụ: 123 Đường ABC"
+                    placeholder={t('addUser.placeholders.address')}
                   />
                 </div>
 
                 <div className="md:col-span-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Ghi chú</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('addUser.labels.notes')}</label>
                   <textarea
                     value={applicantLocation.notes}
                     onChange={(e) => handleApplicantLocationChange('notes', e.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Ghi chú về địa chỉ (tùy chọn)"
+                    placeholder={t('addUser.placeholders.notes')}
                     rows="3"
                   />
                 </div>
               </div>
             </div>
 
-            <h3 className="font-medium mt-8 mb-3 text-blue-600 text-lg flex items-center gap-2">Học vấn</h3>
+            <h3 className="font-medium mt-8 mb-3 text-blue-600 text-lg flex items-center gap-2">{t('addUser.sections.education')}</h3>
             <div className="space-y-4">
               {/* Chọn quốc gia và tìm kiếm trường */}
               <div className="mb-2">
-                <label className="block text-sm font-semibold text-gray-600 mb-1">Quốc gia</label>
+                <label className="block text-sm font-semibold text-gray-600 mb-1">{t('addUser.labels.country')}</label>
                 <select
                   value={selectedCountry}
                   onChange={e => setSelectedCountry(e.target.value)}
@@ -491,7 +493,7 @@ const AddUserPage = () => {
               <div className="mb-2">
                 <input
                   type="text"
-                  placeholder="Tìm kiếm trường..."
+                  placeholder={t('addUser.labels.searchSchool')}
                   value={institutionSearch}
                   onChange={e => setInstitutionSearch(e.target.value)}
                   className="w-full border border-blue-200 rounded-lg px-3 py-2"
@@ -499,15 +501,15 @@ const AddUserPage = () => {
               </div>
               {educations.map((edu, idx) => (
                 <div key={idx} className="relative grid grid-cols-2 gap-4 border-2 border-blue-100 p-4 rounded-2xl bg-white shadow-md hover:shadow-xl transition-all duration-200 animate-fade-in">
-                  <input name="title" placeholder="Tên bằng cấp" value={edu.title} onChange={(e) => handleEducationChange(idx, e)} className="w-full border border-blue-200 rounded-lg px-3 py-2 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all duration-200" />
-                  <input name="year" type="number" placeholder="Năm" value={edu.year} onChange={(e) => handleEducationChange(idx, e)} className="w-full border border-blue-200 rounded-lg px-3 py-2 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all duration-200" />
+                  <input name="title" placeholder={t('addUser.placeholders.degreeTitle')} value={edu.title} onChange={(e) => handleEducationChange(idx, e)} className="w-full border border-blue-200 rounded-lg px-3 py-2 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all duration-200" />
+                  <input name="year" type="number" placeholder={t('addUser.placeholders.year')} value={edu.year} onChange={(e) => handleEducationChange(idx, e)} className="w-full border border-blue-200 rounded-lg px-3 py-2 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all duration-200" />
                   <select
                     name="institutionId"
                     value={edu.institutionId}
                     onChange={e => handleEducationChange(idx, e)}
                     className="w-full border border-blue-200 rounded-lg px-3 py-2 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all duration-200"
                   >
-                    <option value="">-- Chọn trường --</option>
+                    <option value="">{t('addUser.labels.selectSchool')}</option>
                     {institutions
                       .filter(inst =>
                         inst.country === selectedCountry &&
@@ -523,13 +525,13 @@ const AddUserPage = () => {
                     onChange={e => handleEducationChange(idx, e)}
                     className="w-full border border-blue-200 rounded-lg px-3 py-2 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all duration-200"
                   >
-                    <option value="">-- Chọn bậc học --</option>
+                    <option value="">{t('addUser.labels.selectLevel')}</option>
                     {levels.map((level, i) => (
                       <option key={i} value={level.levelId || level.id}>{level.name}</option>
                     ))}
                   </select>
                   {educations.length > 1 && (
-                    <button type="button" onClick={() => removeEducation(idx)} className="absolute -top-3 -right-3 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 z-10" title="Xóa học vấn">
+                    <button type="button" onClick={() => removeEducation(idx)} className="absolute -top-3 -right-3 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 z-10" title={t('addUser.labels.removeEducation')}>
                       <FaTrash />
                     </button>
                   )}
@@ -537,78 +539,78 @@ const AddUserPage = () => {
               ))}
             </div>
             <button type="button" onClick={addEducation} className="flex items-center gap-2 text-blue-700 hover:text-blue-900 font-semibold mt-4 transition-all duration-200">
-              <span className="text-xl">+</span> Thêm học vấn
+              <span className="text-xl">+</span> {t('addUser.buttons.addEducation')}
             </button>
           </div>
         )}
         {user.role === "RECRUITER" && (
           <div className="border-t pt-8 mt-10">
-            <h2 className="text-2xl font-bold text-blue-700 mb-6">Thông Tin Nhà Tuyển Dụng</h2>
+            <h2 className="text-2xl font-bold text-blue-700 mb-6">{t('addUser.sections.recruiter')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                <label className="block mb-1 font-semibold text-gray-600 text-sm">Tên công ty</label>
+                <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.companyName')}</label>
                 <input name="companyName" value={recruiter.companyName} onChange={handleRecruiterChange} className="w-full border-2 border-blue-200 rounded-xl px-4 py-2" required />
               </div>
               <div>
-                <label className="block mb-1 font-semibold text-gray-600 text-sm">Website công ty</label>
+                <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.companyWebsite')}</label>
                 <input name="companyWebsite" value={recruiter.companyWebsite} onChange={handleRecruiterChange} className="w-full border-2 border-blue-200 rounded-xl px-4 py-2" />
               </div>
               <div>
-                <label className="block mb-1 font-semibold text-gray-600 text-sm">Vị trí</label>
+                <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.position')}</label>
                 <input name="position" value={recruiter.position} onChange={handleRecruiterChange} className="w-full border-2 border-blue-200 rounded-xl px-4 py-2" />
               </div>
               <div>
-                <label className="block mb-1 font-semibold text-gray-600 text-sm">Logo URL</label>
+                <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.logoUrl')}</label>
                 <input name="logoUrl" value={recruiter.logoUrl} onChange={handleRecruiterChange} className="w-full border-2 border-blue-200 rounded-xl px-4 py-2" />
               </div>
               <div className="md:col-span-2">
-                <label className="block mb-1 font-semibold text-gray-600 text-sm">Giới thiệu công ty</label>
+                <label className="block mb-1 font-semibold text-gray-600 text-sm">{t('addUser.labels.companyBio')}</label>
                 <textarea name="bio" value={recruiter.bio} onChange={handleRecruiterChange} className="w-full border-2 border-blue-200 rounded-xl px-4 py-2" />
               </div>
             </div>
 
             {/* Location fields cho recruiter */}
             <div className="mt-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
-              <h4 className="font-medium text-gray-900 mb-3">Thông tin địa chỉ</h4>
+              <h4 className="font-medium text-gray-900 mb-3">{t('addUser.sections.location')}</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tỉnh/Thành phố</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('addUser.labels.province')}</label>
                   <input
                     type="text"
                     value={recruiterLocation.province}
                     onChange={(e) => handleRecruiterLocationChange('province', e.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Ví dụ: Hà Nội"
+                    placeholder={t('addUser.placeholders.province')}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Quận/Huyện</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('addUser.labels.district')}</label>
                   <input
                     type="text"
                     value={recruiterLocation.district}
                     onChange={(e) => handleRecruiterLocationChange('district', e.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Ví dụ: Cầu Giấy"
+                    placeholder={t('addUser.placeholders.district')}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Địa chỉ chi tiết</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('addUser.labels.address')}</label>
                   <input
                     type="text"
                     value={recruiterLocation.address}
                     onChange={(e) => handleRecruiterLocationChange('address', e.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Ví dụ: 123 Đường ABC"
+                    placeholder={t('addUser.placeholders.address')}
                   />
                 </div>
 
                 <div className="md:col-span-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Ghi chú</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('addUser.labels.notes')}</label>
                   <textarea
                     value={recruiterLocation.notes}
                     onChange={(e) => handleRecruiterLocationChange('notes', e.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Ghi chú về địa chỉ (tùy chọn)"
+                    placeholder={t('addUser.placeholders.notes')}
                     rows="3"
                   />
                 </div>
@@ -618,7 +620,7 @@ const AddUserPage = () => {
         )}
         <div className="flex justify-center mt-12">
           <button type="submit" className="bg-gradient-to-r from-blue-600 to-blue-400 text-white px-10 py-4 rounded-2xl font-bold text-xl shadow-xl hover:from-blue-700 hover:to-blue-500 transition-all duration-200 active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-200">
-            Thêm Người Dùng
+            {t('addUser.buttons.submit')}
           </button>
         </div>
       </form>

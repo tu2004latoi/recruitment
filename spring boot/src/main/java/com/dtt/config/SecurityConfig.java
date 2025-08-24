@@ -42,8 +42,9 @@ public class SecurityConfig {
                                 "/api/levels", "/api/levels/**",
                                 "/api/institutions", "/api/institutions/**",
                                 "/api/notifications/**",
-                                "/api/jobs", "/api/jobs/*",
-                                "/api/public/users/**"
+                                "/api/jobs", "/api/jobs/*", "/api/jobs/**",
+                                "/api/public/users/**",
+                                "/ws/**"
                         ).permitAll()
                         .requestMatchers(
                                 "/api/secure/profile", "/api/secure/profile/**",
@@ -53,17 +54,23 @@ public class SecurityConfig {
                                 "/api/send/mail/**",
                                 "/api/locations", "/api/locations/**",
                                 "/api/users/applicants/*", "/api/users/recruiters/*",
-                                "/api/export/**"
+                                "/api/export/**",
+                                "/api/chat/**",
+                                "/api/devices", "/api/devices/**"
                         ).hasAnyRole("ADMIN", "RECRUITER", "APPLICANT", "MODERATOR")
                         .requestMatchers(
                                 "/api/jobs/*/**",
                                 "/api/users/recruiters/**",
-                                "/api/interviews", "/api/interviews/**"
+                                "/api/interviews", "/api/interviews/**",
+                                "/api/recruiter/statistics/**"
                         ).hasAnyRole("ADMIN", "RECRUITER", "MODERATOR")
                         .requestMatchers(
                                 "/api/users", "/api/users/**",
                                 "/api/users/moderators/**"
                         ).hasAnyRole("ADMIN", "MODERATOR")
+                        .requestMatchers(
+                                "/api/admin/statistics/**"
+                        ).hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2

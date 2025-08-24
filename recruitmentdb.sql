@@ -63,7 +63,7 @@ create table moderators(
 
 create table recruiters (
     recruiter_id int primary key,
-    company_name varchar(250) not null,
+    company_name varchar(250),
     bio text,
     company_website varchar(255),
     location_id int,
@@ -147,26 +147,6 @@ create table applications(
     unique (user_id, job_id)
 );
 
-create table cvs(
-	cv_id int auto_increment primary key,
-    user_id int not null,
-    title varchar(255),
-    summary text,
-    skills text,
-    experience int,
-    education_id int,
-    certifications text,
-    languages text,
-    projects text,
-    achievements text,
-    cv_file varchar(255),
-    created_date datetime,
-    is_active boolean default true,
-    
-    foreign key (user_id) references users(user_id) on delete cascade,
-    foreign key (education_id) references educations(education_id) on delete set null
-);
-
 create table favorite_jobs(
 	favorite_job_id int auto_increment primary key,
     job_id int not null,
@@ -188,6 +168,28 @@ CREATE TABLE interviews (
     foreign key (job_id) references jobs(job_id) on delete cascade,
     foreign key (location_id) references locations(location_id) on delete set null,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+CREATE TABLE messages (
+    message_id int AUTO_INCREMENT PRIMARY KEY,
+    sender_id int NOT NULL,
+    receiver_id int NOT NULL,
+    content TEXT NOT NULL,       
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+    status ENUM('SENT','DELIVERED','READ') DEFAULT 'SENT', 
+    FOREIGN KEY (sender_id) REFERENCES users(user_id) on delete cascade,
+    FOREIGN KEY (receiver_id) REFERENCES users(user_id) on delete cascade
+);
+
+CREATE TABLE user_devices(
+	device_id int auto_increment primary key,
+    user_id int not null,
+    fcm_token varchar(512) not null,
+    device_type enum('WEB', 'ANDROID', 'IOS'),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+     
+	foreign key (user_id) references users(user_id) on delete cascade
 );
 
 

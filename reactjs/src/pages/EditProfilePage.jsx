@@ -68,6 +68,13 @@ const UpdateUserPage = () => {
   const [preview, setPreview] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Change password state
+  const [passwords, setPasswords] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
   useEffect(() => {
     const fetchUser = async () => {
       const res = await authApis().get(endpoints.currentUser);
@@ -121,16 +128,29 @@ const UpdateUserPage = () => {
     const fetchRecruiter = async () => {
       if (user.role === "RECRUITER") {
         try {
-          const res = await authApis().get(endpoints.recruiterDetail(userId));
+          const res = await authApis().get(endpoints.getRecruiterProfile);
           setRecruiter(res.data);
-          const resLocation = await authApis().get(endpoints.locationDetail(res.data.location.locationId));
-          setRecruiterLocation({
-            locationId: resLocation.data.locationId,
-            province: resLocation.data.province,
-            district: resLocation.data.district,
-            address: resLocation.data.address,
-            notes: resLocation.data.notes
-          });
+          const locId = res.data?.location?.locationId || res.data?.locationId || null;
+          if (locId) {
+            const resLocation = await authApis().get(endpoints.locationDetail(locId));
+            setRecruiterLocation({
+              locationId: resLocation.data.locationId,
+              province: resLocation.data.province || "",
+              district: resLocation.data.district || "",
+              address: resLocation.data.address || "",
+              notes: resLocation.data.notes || ""
+            });
+          } else {
+            // No location yet; keep defaults
+            setRecruiterLocation(prev => ({
+              ...prev,
+              locationId: null,
+              province: prev.province || "",
+              district: prev.district || "",
+              address: prev.address || "",
+              notes: prev.notes || ""
+            }));
+          }
         } catch (err) {
           console.error("Error fetching recruiter data:", err);
         }
@@ -140,14 +160,12 @@ const UpdateUserPage = () => {
     if (user.role === "RECRUITER") {
       fetchRecruiter();
     }
-  }, [user.role, userId]);
+  }, [user.role]);
 
   useEffect(() => {
-    console.log("Applicant location updated:", applicantLocation);
   }, [applicantLocation]);
 
   useEffect(() => {
-    console.log("Recruiter location updated:", recruiterLocation);
   }, [recruiterLocation]);
 
   // Fetch applicant data if role is APPLICANT
@@ -157,14 +175,26 @@ const UpdateUserPage = () => {
         try {
           const res = await authApis().get(endpoints.getApplicantProfile);
           setApplicant(res.data);
-          const resLocation = await authApis().get(endpoints.locationDetail(res.data.location.locationId));
-          setApplicantLocation({
-            locationId: resLocation.data.locationId,
-            province: resLocation.data.province,
-            district: resLocation.data.district,
-            address: resLocation.data.address,
-            notes: resLocation.data.notes
-          });
+          const locId = res.data?.location?.locationId || res.data?.locationId || null;
+          if (locId) {
+            const resLocation = await authApis().get(endpoints.locationDetail(locId));
+            setApplicantLocation({
+              locationId: resLocation.data.locationId,
+              province: resLocation.data.province || "",
+              district: resLocation.data.district || "",
+              address: resLocation.data.address || "",
+              notes: resLocation.data.notes || ""
+            });
+          } else {
+            setApplicantLocation(prev => ({
+              ...prev,
+              locationId: null,
+              province: prev.province || "",
+              district: prev.district || "",
+              address: prev.address || "",
+              notes: prev.notes || ""
+            }));
+          }
           // Fetch educations for this applicant
           const educationRes = await authApis().get(endpoints.getEducationApplicantProfile);
           setEducations(educationRes.data.map(edu => {
@@ -214,8 +244,17 @@ const UpdateUserPage = () => {
     setApplicant({ ...applicant, [e.target.name]: e.target.value });
   };
 
+  const handlePasswordInputChange = (e) => {
+    const { name, value } = e.target;
+    setPasswords({ ...passwords, [name]: value });
+  };
+
   const handleApplicantLocationChange = (field, value) => {
     setApplicantLocation({ ...applicantLocation, [field]: value });
+  };
+
+  const handleRecruiterLocationChange = (field, value) => {
+    setRecruiterLocation({ ...recruiterLocation, [field]: value });
   };
 
   const handleEducationChange = (idx, e) => {
@@ -258,42 +297,63 @@ const UpdateUserPage = () => {
 
       await authApis().patch(endpoints.updateCurrentUser, formData);
 
-      if (user.role === "APPLICANT" &&
-        applicantLocation.locationId &&
-        applicantLocation.province &&
-        applicantLocation.district &&
-        applicantLocation.address) {
-        try {
-          const locationResponse = await authApis().patch(endpoints.updateLocation(applicantLocation.locationId), applicantLocation);
-          console.log("Location response:", locationResponse);
-          console.log("Update applicant location:", applicantLocation.locationId);
-        } catch (error) {
-          alert("Cập nhật địa chỉ cho ứng viên thất bại: " + error.message);
-          return;
+      // Chuẩn hóa xử lý địa chỉ: tạo mới nếu chưa có locationId, cập nhật nếu đã có
+      let finalApplicantLocationId = applicantLocation.locationId || null;
+      let finalRecruiterLocationId = recruiterLocation.locationId || null;
+
+      // Applicant location create-or-update
+      if (user.role === "APPLICANT") {
+        const hasApplicantAddress = applicantLocation.province && applicantLocation.district && applicantLocation.address;
+        if (hasApplicantAddress) {
+          try {
+            if (finalApplicantLocationId) {
+              const locationResponse = await authApis().patch(
+                endpoints.updateLocation(finalApplicantLocationId),
+                applicantLocation
+              );
+              console.log("Update applicant location:", finalApplicantLocationId, locationResponse?.status);
+            } else {
+              const createRes = await authApis().post(endpoints.createLocation, applicantLocation);
+              finalApplicantLocationId = createRes.data?.locationId || createRes.data?.id;
+              setApplicantLocation(prev => ({ ...prev, locationId: finalApplicantLocationId }));
+              console.log("Create applicant location:", finalApplicantLocationId);
+            }
+          } catch (error) {
+            alert("Cập nhật địa chỉ cho ứng viên thất bại: " + error.message);
+            return;
+          }
         }
       }
 
-      if (user.role === "RECRUITER" &&
-        recruiterLocation.locationId &&
-        recruiterLocation.province &&
-        recruiterLocation.district &&
-        recruiterLocation.address) {
-        try {
-          const locationResponse = await authApis().patch(endpoints.updateLocation(recruiterLocation.locationId), recruiterLocation);
-          console.log("Location response:", locationResponse);
-          console.log("Update recruiter location:", recruiterLocation.locationId);
-        } catch (error) {
-          alert("Cập nhật địa chỉ cho nhà tuyển dụng thất bại: " + error.message);
-          return;
+      // Recruiter location create-or-update
+      if (user.role === "RECRUITER") {
+        const hasRecruiterAddress = recruiterLocation.province && recruiterLocation.district && recruiterLocation.address;
+        if (hasRecruiterAddress) {
+          try {
+            if (finalRecruiterLocationId) {
+              const locationResponse = await authApis().patch(
+                endpoints.updateLocation(finalRecruiterLocationId),
+                recruiterLocation
+              );
+              console.log("Update recruiter location:", finalRecruiterLocationId, locationResponse?.status);
+            } else {
+              const createRes = await authApis().post(endpoints.createLocation, recruiterLocation);
+              finalRecruiterLocationId = createRes.data?.locationId || createRes.data?.id;
+              setRecruiterLocation(prev => ({ ...prev, locationId: finalRecruiterLocationId }));
+              console.log("Create recruiter location:", finalRecruiterLocationId);
+            }
+          } catch (error) {
+            alert("Cập nhật địa chỉ cho nhà tuyển dụng thất bại: " + error.message);
+            return;
+          }
         }
       }
 
       // Nếu role là RECRUITER, cập nhật recruiter sau khi đã cập nhật user
       if (user.role === "RECRUITER") {
         const recruiterUpdateData = {
-          userId: parseInt(userId),
           ...recruiter,
-          locationId: recruiterLocation.locationId,
+          locationId: finalRecruiterLocationId,
         };
 
         await authApis().patch(endpoints.updateRecruiterProfile, recruiterUpdateData, {
@@ -307,8 +367,7 @@ const UpdateUserPage = () => {
       if (user.role === "APPLICANT") {
         const applicantUpdateData = {
           ...applicant,
-          userId: parseInt(userId),
-          locationId: applicantLocation.locationId,
+          locationId: finalApplicantLocationId,
         };
 
         const applicantRes = await authApis().patch(endpoints.updateApplicantProfile, applicantUpdateData, {
@@ -455,6 +514,35 @@ const UpdateUserPage = () => {
     }
   };
 
+  const handleChangePassword = async () => {
+    // Basic validations on client side
+    if (!passwords.newPassword || !passwords.confirmPassword) {
+      alert("Vui lòng nhập đầy đủ mật khẩu mới và xác nhận mật khẩu.");
+      return;
+    }
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      alert("Mật khẩu xác nhận không khớp.");
+      return;
+    }
+    if (passwords.newPassword.length < 6) {
+      alert("Mật khẩu mới phải có ít nhất 6 ký tự.");
+      return;
+    }
+
+    try {
+      await authApis().patch(endpoints.changePassword, {
+        currentPassword: passwords.currentPassword,
+        newPassword: passwords.newPassword,
+      });
+      
+      alert("Đổi mật khẩu thành công!");
+      setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (err) {
+      console.error(err);
+      alert("Đổi mật khẩu thất bại. Vui lòng thử lại.");
+    }
+  };
+
   const countryList = Array.from(
     new Set(institutions.map(inst => inst.country).filter(Boolean))
   ).sort();
@@ -541,6 +629,109 @@ const UpdateUserPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Change Password section */}
+        <div className="border-t pt-8 mt-10">
+          <h2 className="text-2xl font-bold text-blue-700 mb-6">Đổi Mật Khẩu</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+              <label className="block mb-1 font-semibold text-gray-600 text-sm">Mật khẩu hiện tại</label>
+              <input
+                type="password"
+                name="currentPassword"
+                value={passwords.currentPassword}
+                onChange={handlePasswordInputChange}
+                className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white"
+                placeholder="Nhập mật khẩu hiện tại"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-semibold text-gray-600 text-sm">Mật khẩu mới</label>
+              <input
+                type="password"
+                name="newPassword"
+                value={passwords.newPassword}
+                onChange={handlePasswordInputChange}
+                className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white"
+                placeholder="Nhập mật khẩu mới"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-semibold text-gray-600 text-sm">Xác nhận mật khẩu</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={passwords.confirmPassword}
+                onChange={handlePasswordInputChange}
+                className="w-full border-2 border-blue-200 rounded-xl px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm transition-all duration-200 bg-white"
+                placeholder="Nhập lại mật khẩu mới"
+              />
+            </div>
+          </div>
+          <div className="mt-6">
+            <button
+              type="button"
+              onClick={handleChangePassword}
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md transition-all duration-200"
+            >
+              Cập nhật mật khẩu
+            </button>
+          </div>
+        </div>
+
+        {/* Recruiter section */}
+        {user.role === "RECRUITER" && (
+          <div className="border-t pt-8 mt-10">
+            <h2 className="text-2xl font-bold text-blue-700 mb-6 flex items-center gap-2">Thông Tin Nhà Tuyển Dụng</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="md:col-span-2 mt-2 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <h4 className="font-medium text-gray-900 mb-3">Thông tin địa chỉ</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tỉnh/Thành phố</label>
+                    <input
+                      type="text"
+                      value={recruiterLocation.province}
+                      onChange={(e) => handleRecruiterLocationChange('province', e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      placeholder="Ví dụ: Hà Nội"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Quận/Huyện</label>
+                    <input
+                      type="text"
+                      value={recruiterLocation.district}
+                      onChange={(e) => handleRecruiterLocationChange('district', e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      placeholder="Ví dụ: Cầu Giấy"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Địa chỉ chi tiết</label>
+                    <input
+                      type="text"
+                      value={recruiterLocation.address}
+                      onChange={(e) => handleRecruiterLocationChange('address', e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      placeholder="Ví dụ: 123 Đường ABC"
+                    />
+                  </div>
+                  <div className="md:col-span-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Ghi chú</label>
+                    <textarea
+                      value={recruiterLocation.notes}
+                      onChange={(e) => handleRecruiterLocationChange('notes', e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      placeholder="Ghi chú về địa chỉ (tùy chọn)"
+                      rows="3"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Applicant section */}
         {user.role === "APPLICANT" && (
@@ -667,7 +858,6 @@ const UpdateUserPage = () => {
               </div>
             )}
             <div className="space-y-4">
-              {/* Chọn quốc gia và tìm kiếm trường */}
               <div className="mb-2">
                 <label className="block text-sm font-semibold text-gray-600 mb-1">Quốc gia</label>
                 <select

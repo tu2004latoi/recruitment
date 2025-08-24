@@ -1,10 +1,13 @@
 import React, { useEffect, useState, useContext } from "react";
+import { useTranslation } from 'react-i18next';
+
 import { authApis, endpoints } from "../configs/Apis";
 import { useNavigate } from "react-router";
 import { FaBriefcase, FaArrowLeft, FaSave, FaTimes } from "react-icons/fa";
 import { MyUserContext } from "../configs/MyContexts";
 
 const AddJobForRecruiterPage = () => {
+    const { t } = useTranslation();
     const [formData, setFormData] = useState({
         title: "",
         description: "",
@@ -71,7 +74,7 @@ const AddJobForRecruiterPage = () => {
         
         // Kiểm tra currentUser
         if (!currentUser || !currentUser.userId) {
-            alert("Không thể lấy thông tin người dùng. Vui lòng thử lại!");
+            alert(t('recruiterAddJob.alerts.missingUser'));
             return;
         }
         
@@ -99,14 +102,14 @@ const AddJobForRecruiterPage = () => {
             console.log("Request payload:", JSON.stringify(jobData, null, 2));
 
             await authApis().post(endpoints["createJob"], jobData);
-            alert("Đăng tin tuyển dụng thành công!");
+            alert(t('recruiterAddJob.alerts.createSuccess'));
             navigate("/recruiter");
         } catch (err) {
             console.error("Error creating job:", err);
             if (err.response?.data?.message) {
-                alert(`Đăng tin tuyển dụng thất bại: ${err.response.data.message}`);
+                alert(t('recruiterAddJob.alerts.createFailedWithMessage', { message: err.response.data.message }));
             } else {
-                alert("Đăng tin tuyển dụng thất bại!");
+                alert(t('recruiterAddJob.alerts.createFailed'));
             }
         } finally {
             setIsLoading(false);
@@ -140,8 +143,8 @@ const AddJobForRecruiterPage = () => {
                             <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-2 border-white animate-pulse-slow"></div>
                         </div>
                         <div>
-                            <h1 className="text-4xl font-bold gradient-text">Đăng tin tuyển dụng</h1>
-                            <p className="text-gray-600 mt-1">Tạo tin tuyển dụng mới</p>
+                            <h1 className="text-4xl font-bold gradient-text">{t('recruiterAddJob.headers.title')}</h1>
+                            <p className="text-gray-600 mt-1">{t('recruiterAddJob.headers.subtitle')}</p>
                         </div>
                     </div>
                 </div>
@@ -153,7 +156,7 @@ const AddJobForRecruiterPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Tiêu đề công việc *
+                                    {t('recruiterAddJob.labels.title')} *
                                 </label>
                                 <input
                                     type="text"
@@ -161,22 +164,8 @@ const AddJobForRecruiterPage = () => {
                                     value={formData.title}
                                     onChange={handleChange}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                                    placeholder="Nhập tiêu đề công việc..."
+                                    placeholder={t('recruiterAddJob.placeholders.title')}
                                     required
-                                    maxLength={255}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Địa điểm
-                                </label>
-                                <input
-                                    type="text"
-                                    name="location"
-                                    value={formData.location}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                                    placeholder="Nhập địa điểm..."
                                     maxLength={255}
                                 />
                             </div>
@@ -184,14 +173,14 @@ const AddJobForRecruiterPage = () => {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Mô tả công việc
+                                {t('recruiterAddJob.labels.description')}
                             </label>
                             <textarea
                                 name="description"
                                 value={formData.description}
                                 onChange={handleChange}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                                placeholder="Nhập mô tả chi tiết công việc..."
+                                placeholder={t('recruiterAddJob.placeholders.description')}
                                 rows="4"
                             />
                         </div>
@@ -200,7 +189,7 @@ const AddJobForRecruiterPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Mức lương (VNĐ)
+                                    {t('recruiterAddJob.labels.salaryVnd')}
                                 </label>
                                 <input
                                     type="number"
@@ -208,13 +197,13 @@ const AddJobForRecruiterPage = () => {
                                     value={formData.salary}
                                     onChange={handleChange}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                                    placeholder="Nhập mức lương..."
+                                    placeholder={t('recruiterAddJob.placeholders.salary')}
                                     min="0"
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Số lượng tuyển *
+                                    {t('recruiterAddJob.labels.quantity')} *
                                 </label>
                                 <input
                                     type="number"
@@ -222,14 +211,14 @@ const AddJobForRecruiterPage = () => {
                                     value={formData.quantity}
                                     onChange={handleChange}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                                    placeholder="Số lượng..."
+                                    placeholder={t('recruiterAddJob.placeholders.quantity')}
                                     required
                                     min="1"
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Ngày hết hạn
+                                    {t('recruiterAddJob.labels.expiredAt')}
                                 </label>
                                 <input
                                     type="datetime-local"
@@ -245,7 +234,7 @@ const AddJobForRecruiterPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Trình độ
+                                    {t('recruiterAddJob.labels.level')}
                                 </label>
                                 <select
                                     name="levelId"
@@ -253,7 +242,7 @@ const AddJobForRecruiterPage = () => {
                                     onChange={handleChange}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                                 >
-                                    <option value="">Chọn trình độ</option>
+                                    <option value="">{t('recruiterAddJob.options.selectLevel')}</option>
                                     {levels.map(level => (
                                         <option key={level.levelId} value={level.levelId}>
                                             {level.name}
@@ -263,7 +252,7 @@ const AddJobForRecruiterPage = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Loại công việc
+                                    {t('recruiterAddJob.labels.jobType')}
                                 </label>
                                 <select
                                     name="jobTypeId"
@@ -271,7 +260,7 @@ const AddJobForRecruiterPage = () => {
                                     onChange={handleChange}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                                 >
-                                    <option value="">Chọn loại công việc</option>
+                                    <option value="">{t('recruiterAddJob.options.selectJobType')}</option>
                                     {jobTypes.map(jobType => (
                                         <option key={jobType.jobTypeId} value={jobType.jobTypeId}>
                                             {jobType.name}
@@ -281,7 +270,7 @@ const AddJobForRecruiterPage = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Ngành nghề
+                                    {t('recruiterAddJob.labels.industry')}
                                 </label>
                                 <select
                                     name="industryId"
@@ -289,7 +278,7 @@ const AddJobForRecruiterPage = () => {
                                     onChange={handleChange}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                                 >
-                                    <option value="">Chọn ngành nghề</option>
+                                    <option value="">{t('recruiterAddJob.options.selectIndustry')}</option>
                                     {industries.map(industry => (
                                         <option key={industry.industryId} value={industry.industryId}>
                                             {industry.name}
@@ -310,7 +299,7 @@ const AddJobForRecruiterPage = () => {
                                     className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                                 />
                                 <label className="ml-2 text-sm font-medium text-gray-700">
-                                    Hoạt động
+                                    {t('recruiterAddJob.labels.statusActive')}
                                 </label>
                             </div>
                         </div>
@@ -324,12 +313,12 @@ const AddJobForRecruiterPage = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-blue-900">
-                                            Đăng tin với tư cách: {currentUser.firstName} {currentUser.lastName}
+                                            {t('recruiterAddJob.recruiterInfo.actingAs', { firstName: currentUser.firstName, lastName: currentUser.lastName })}
                                         </p>
                                         <p className="text-xs text-blue-700">{currentUser.email}</p>
-                                        <p className="text-xs text-blue-600">User ID: {currentUser.userId}</p>
+                                        <p className="text-xs text-blue-600">{t('recruiterAddJob.recruiterInfo.userId', { id: currentUser.userId })}</p>
                                         {recruiterLocationId && (
-                                            <p className="text-xs text-blue-600">Location ID: {recruiterLocationId}</p>
+                                            <p className="text-xs text-blue-600">{t('recruiterAddJob.recruiterInfo.locationId', { id: recruiterLocationId })}</p>
                                         )}
                                     </div>
                                 </div>
@@ -348,7 +337,7 @@ const AddJobForRecruiterPage = () => {
                                 ) : (
                                     <FaSave className="text-lg" />
                                 )}
-                                Đăng tin tuyển dụng
+                                {t('recruiterAddJob.buttons.submit')}
                             </button>
                             <button
                                 type="button"
@@ -356,7 +345,7 @@ const AddJobForRecruiterPage = () => {
                                 className="flex-1 bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition-all duration-200 flex items-center justify-center gap-2"
                             >
                                 <FaTimes className="text-lg" />
-                                Hủy
+                                {t('recruiterAddJob.buttons.cancel')}
                             </button>
                         </div>
                     </form>

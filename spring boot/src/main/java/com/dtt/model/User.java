@@ -78,4 +78,8 @@ public class User implements Serializable {
         LOCAL,
         GOOGLE
     }
+
+    public String getName(){
+        return firstName + lastName;
+    }
 }
